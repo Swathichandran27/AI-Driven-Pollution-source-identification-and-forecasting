@@ -1,0 +1,22 @@
+# Virtual Environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+backend/instance/
+*.db
+
+# ML models
+ml_project/models/
+*.pkl
+
+# Data files
+ml_project/data/
+*.csv
+
+# OS files
+.DS_Store
+Thumbs.db

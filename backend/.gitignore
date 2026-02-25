@@ -1,0 +1,72 @@
+# ----------------------------
+# Python virtual environments
+# ----------------------------
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+
+# ----------------------------
+# Environment variables
+# ----------------------------
+.env
+*.env
+
+# ----------------------------
+# Python cache / compiled files
+# ----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# ----------------------------
+# Distribution / packaging
+# ----------------------------
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# ----------------------------
+# Logs & runtime files
+# ----------------------------
+*.log
+logs/
+
+# ----------------------------
+# Test / coverage
+# ----------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ----------------------------
+# IDE / Editor files
+# ----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----------------------------
+# OS generated files
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# Jupyter notebooks
+# ----------------------------
+.ipynb_checkpoints/
+
+# ----------------------------
+# Misc cache/temp
+# ----------------------------
+cache/
+*.tmp
+*.temp

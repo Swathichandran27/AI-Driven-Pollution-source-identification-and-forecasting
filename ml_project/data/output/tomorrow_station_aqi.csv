@@ -1,0 +1,40 @@
+station,city,datetime,predicted_aqi
+"Alipur, Delhi - DPCC",Delhi,2026-02-17 17:00:00,379.21
+"Anand Vihar, Delhi - DPCC",Delhi,2026-02-17 17:00:00,378.135
+"Ashok Vihar, Delhi - DPCC",Delhi,2026-02-17 17:00:00,407.8983333333333
+"Aya Nagar, Delhi - IMD",Delhi,2026-02-17 17:00:00,415.985
+"Bawana, Delhi - DPCC",Delhi,2026-02-17 17:00:00,402.20833333333337
+"Burari Crossing, Delhi - IMD",Delhi,2026-02-17 17:00:00,375.4162380952381
+"CRRI Mathura Road, Delhi - IMD",Delhi,2026-02-17 17:00:00,393.4453571428571
+"Chandni Chowk, Delhi - IITM",Delhi,2026-02-17 17:00:00,408.99766666666665
+"DTU, Delhi - CPCB",Delhi,2026-02-17 17:00:00,408.0899999999999
+"Dr. Karni Singh Shooting Range, Delhi - DPCC",Delhi,2026-02-17 17:00:00,376.315
+"Dwarka-Sector 8, Delhi - DPCC ",Delhi,2026-02-17 17:00:00,390.8882142857143
+"IGI Airport (T3), Delhi - IMD",Delhi,2026-02-17 17:00:00,409.78625
+"IHBAS, Dilshad Garden, Delhi - CPCB",Delhi,2026-02-17 17:00:00,373.33
+"IIT Delhi, Delhi - IITM",Delhi,2026-02-17 17:00:00,382.615
+"ITO, Delhi - CPCB",Delhi,2026-02-17 17:00:00,415.30666666666673
+"Jahangirpuri, Delhi - DPCC",Delhi,2026-02-17 17:00:00,279.069010989011
+"Jawaharlal Nehru Stadium, Delhi - DPCC",Delhi,2026-02-17 17:00:00,373.02
+"Lodhi Road, Delhi - IMD",Delhi,2026-02-17 17:00:00,366.715
+"Major Dhyan Chand National Stadium, Delhi - DPCC",Delhi,2026-02-17 17:00:00,390.045
+"Mandir Marg, Delhi - DPCC",Delhi,2026-02-17 17:00:00,336.201875
+"Mundka, Delhi - DPCC",Delhi,2026-02-17 17:00:00,401.28833333333336
+"NSIT Dwarka, Delhi - CPCB",Delhi,2026-02-17 17:00:00,398.89583333333326
+"Najafgarh, Delhi - DPCC",Delhi,2026-02-17 17:00:00,373.355
+"Narela, Delhi - DPCC",Delhi,2026-02-17 17:00:00,393.86321428571426
+"Nehru Nagar, Delhi - DPCC",Delhi,2026-02-17 17:00:00,367.16
+"North Campus, DU, Delhi - IMD",Delhi,2026-02-17 17:00:00,407.4060416666666
+"Okhla Phase-2, Delhi - DPCC",Delhi,2026-02-17 17:00:00,385.875
+"Patparganj, Delhi - DPCC",Delhi,2026-02-17 17:00:00,387.3516666666667
+"Punjabi Bagh, Delhi - DPCC",Delhi,2026-02-17 17:00:00,413.176875
+"Pusa, Delhi - DPCC",Delhi,2026-02-17 17:00:00,374.97875
+"Pusa, Delhi - IMD",Delhi,2026-02-17 17:00:00,370.99
+"R K Puram, Delhi - DPCC",Delhi,2026-02-17 17:00:00,376.53875
+"Rohini, Delhi - DPCC",Delhi,2026-02-17 17:00:00,356.33690476190475
+"Shadipur, Delhi - CPCB",Delhi,2026-02-17 17:00:00,315.20020833333336
+"Sirifort, Delhi - CPCB",Delhi,2026-02-17 17:00:00,283.98491976516635
+"Sonia Vihar, Delhi - DPCC",Delhi,2026-02-17 17:00:00,346.15293650793654
+"Sri Aurobindo Marg, Delhi - DPCC",Delhi,2026-02-17 17:00:00,384.2715
+"Vivek Vihar, Delhi - DPCC",Delhi,2026-02-17 17:00:00,375.385
+"Wazirpur, Delhi - DPCC",Delhi,2026-02-17 17:00:00,369.805
