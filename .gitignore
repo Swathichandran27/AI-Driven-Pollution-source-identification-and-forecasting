@@ -6,8 +6,7 @@ __pycache__/
 *.pyc
 
 # Database
-backend/instance/
-*.db
+
 
 # ML models
 ml_project/models/
