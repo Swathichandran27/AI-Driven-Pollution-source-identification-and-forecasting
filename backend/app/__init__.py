@@ -17,8 +17,10 @@ def create_app():
 
     # Import routes AFTER db init
     from app.routes import api
+    from app.policy_routes import policy_bp
 
-    # Register Blueprint
+    # Register Blueprints
     app.register_blueprint(api)
+    app.register_blueprint(policy_bp)
 
     return app
