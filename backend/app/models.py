@@ -4,11 +4,10 @@ from app import db
 class AQIPrediction(db.Model):
     __tablename__ = "aqi_predictions"
 
-    id = db.Column(db.Integer, primary_key=True)
-    station = db.Column(db.String(100))
+    station = db.Column(db.String(100), primary_key=True)
     city = db.Column(db.String(100))
-    datetime = db.Column(db.String(50))
-    hour = db.Column(db.Integer)
+    datetime = db.Column(db.String(50), primary_key=True)
+    hour = db.Column(db.Integer, primary_key=True)
     predicted_aqi = db.Column(db.Float)
 
 
@@ -16,8 +15,7 @@ class AQIPrediction(db.Model):
 class AQIHourlyAvg(db.Model):
     __tablename__ = "aqi_hourly_avg"
 
-    id = db.Column(db.Integer, primary_key=True)
-    datetime = db.Column(db.String(50))
+    datetime = db.Column(db.String(50), primary_key=True)
     hour = db.Column(db.Integer)
     average_aqi = db.Column(db.Float)
 
