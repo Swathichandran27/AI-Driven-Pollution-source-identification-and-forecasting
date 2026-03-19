@@ -1,24 +1,19 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Stubble', value: 42 },
-  { name: 'Traffic', value: 28 },
-  { name: 'Industry', value: 18 },
-  { name: 'Dust', value: 12 },
-];
-const COLORS = ['#fb923c', '#60a5fa', '#a78bfa', '#facc15'];
+const COLORS = ['#3b82f6', '#8b5cf6', '#eab308', '#f97316'];
 
-export default function DonutChart() {
+export default function DonutChart({ data = [] }) {
   return (
-    <div style={{ width: '100%', height: 192 }}>
+    <div style={{ width: '100%', height: 160 }}>
       <ResponsiveContainer>
         <PieChart>
-          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={70}>
-            {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={65}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
           </Pie>
+          <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #1e3a5f', borderRadius: 10, color: '#fff' }} />
         </PieChart>
       </ResponsiveContainer>
     </div>

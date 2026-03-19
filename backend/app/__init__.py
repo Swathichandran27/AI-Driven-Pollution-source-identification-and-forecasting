@@ -7,14 +7,11 @@ db = SQLAlchemy()
 
 def create_app():
 
-    # Base project directory
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-    # Instance folder (Flask standard location for DB)
     instance_path = os.path.join(BASE_DIR, "..", "instance")
     os.makedirs(instance_path, exist_ok=True)
 
-    # Database path
     db_path = os.path.join(instance_path, "database.db")
 
     app = Flask(
@@ -30,8 +27,8 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # Enable CORS for frontend
-    CORS(app)
+    # Enable CORS (React → Flask)
+    CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
 
     # Initialize database
     db.init_app(app)
@@ -48,12 +45,12 @@ def create_app():
     # REGISTER BLUEPRINTS
     # =========================
 
-    app.register_blueprint(api, url_prefix="/api")
-    app.register_blueprint(policy_bp, url_prefix="/policy")
-    app.register_blueprint(citizen_bp, url_prefix="/citizen")
+    app.register_blueprint(api)
+    app.register_blueprint(policy_bp)
+    app.register_blueprint(citizen_bp)
 
     # =========================
-    # CREATE TABLES (optional)
+    # CREATE TABLES
     # =========================
 
     with app.app_context():

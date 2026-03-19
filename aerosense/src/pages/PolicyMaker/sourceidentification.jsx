@@ -1,370 +1,307 @@
-// import React, { useState } from "react";
-// import {
-//   PieChart,
-//   Pie,
-//   Cell,
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   Tooltip,
-//   Legend,
-//   ResponsiveContainer,
-// } from "recharts";
-
-// const SourceIdentification = () => {
-//   const [station, setStation] = useState("");
-//   const [result, setResult] = useState(null);
-
-//   const stations = [
-//     "Anand Vihar",
-//     "RK Puram",
-//     "Punjabi Bagh",
-//     "ITO",
-//     "Dwarka Sector 8",
-//     "Okhla Phase 2",
-//     "Mandir Marg",
-//     "Bawana",
-//     "Wazirpur",
-//     "Jahangirpuri",
-//   ];
-
-//   const handleAnalyze = () => {
-//     setResult({
-//       dominant: "Traffic",
-//       traffic: 52,
-//       industry: 18,
-//       dust: 20,
-//       biomass: 10,
-//       explanation:
-//         "High NO2 and CO levels indicate vehicular emissions as dominant.",
-//     });
-//   };
-
-//   const chartData = result
-//     ? [
-//         { name: "Traffic", value: result.traffic },
-//         { name: "Industry", value: result.industry },
-//         { name: "Dust", value: result.dust },
-//         { name: "Biomass", value: result.biomass },
-//       ]
-//     : [];
-
-//   return (
-//     <div className="min-h-screen bg-gray-100 p-8">
-//       <h1 className="text-3xl font-bold mb-6 text-gray-700">
-//         Source Identification
-//       </h1>
-
-//       {/* Dropdown */}
-//       <div className="bg-white p-6 rounded-xl shadow mb-6">
-//         <div className="grid md:grid-cols-2 gap-4">
-//           <select
-//             value={station}
-//             onChange={(e) => setStation(e.target.value)}
-//             className="border p-3 rounded-lg"
-//           >
-//             <option>Select Monitoring Station</option>
-//             {stations.map((s, i) => (
-//               <option key={i}>{s}</option>
-//             ))}
-//           </select>
-
-//           <button
-//             onClick={handleAnalyze}
-//             className="bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-//           >
-//             Analyze Source
-//           </button>
-//         </div>
-//       </div>
-
-//       {result && (
-//         <>
-//           {/* Result Text */}
-//           <div className="bg-white p-6 rounded-xl shadow mb-6">
-//             <h2 className="text-xl font-semibold mb-2">
-//               Dominant Source: {result.dominant}
-//             </h2>
-//             <p>{result.explanation}</p>
-//           </div>
-
-//           {/* Charts */}
-//           <div className="grid md:grid-cols-2 gap-6">
-
-//             {/* Pie Chart */}
-//             <div className="bg-white p-6 rounded-xl shadow">
-//               <h3 className="font-semibold mb-4">
-//                 Source Contribution (Pie)
-//               </h3>
-//               <ResponsiveContainer width="100%" height={300}>
-//                 <PieChart>
-//                   <Pie
-//                     data={chartData}
-//                     dataKey="value"
-//                     outerRadius={100}
-//                     label
-//                   >
-//                     {chartData.map((_, i) => (
-//                       <Cell key={i} />
-//                     ))}
-//                   </Pie>
-//                   <Legend />
-//                   <Tooltip />
-//                 </PieChart>
-//               </ResponsiveContainer>
-//             </div>
-
-//             {/* Bar Graph */}
-//             <div className="bg-white p-6 rounded-xl shadow">
-//               <h3 className="font-semibold mb-4">
-//                 Pollution Distribution (Bar)
-//               </h3>
-//               <ResponsiveContainer width="100%" height={300}>
-//                 <BarChart data={chartData}>
-//                   <XAxis dataKey="name" />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Bar dataKey="value" />
-//                 </BarChart>
-//               </ResponsiveContainer>
-//             </div>
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default SourceIdentification;
-
-
-
-
-
-
-
-
-import React, { useState } from 'react';
-import { 
-  Calendar, 
-  MapPin, 
-  Flame, 
-  Car, 
-  Factory, 
+import React, { useState, useEffect } from "react";
+import {
+  Calendar,
+  MapPin,
+  Flame,
+  Car,
+  Factory,
   Wind,
   Info,
   Download,
   ChevronDown,
-  Satellite
-} from 'lucide-react';
-import PolicySidebar from '../../components/Layout/PolicySidebar';
+  PieChart,
+  BarChart3,
+  TrendingUp
+} from "lucide-react";
+import axios from "axios";
+import {
+  ResponsiveContainer,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+  Legend
+} from "recharts";
+import PolicySidebar from "../../components/Layout/PolicySidebar";
 
 const SourceIdentification = () => {
-  const [selectedDate, setSelectedDate] = useState('2024-11-15');
-  const [selectedLocation, setSelectedLocation] = useState('Delhi-NCR');
+  const [selectedDate, setSelectedDate] = useState("2024-11-15");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [sourceData, setSourceData] = useState(null);
+  const [locations, setLocations] = useState([]);
+  const [activeView, setActiveView] = useState("bars");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const locations = ['Delhi-NCR', 'Anand Vihar', 'Rohini', 'Dwarka', 'Noida', 'Gurugram'];
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/policy/stations")
+      .then((res) => {
+        setLocations(res.data);
+        if (res.data.length > 0) setSelectedLocation(res.data[0]);
+      })
+      .catch((err) => console.error("Failed to fetch stations:", err));
+  }, []);
 
-  const sourceData = {
-    dominant: 'Biomass Burning',
-    contributions: [
-      { name: 'Biomass Burning', value: 42, color: 'bg-orange-500', icon: Flame, source: 'Stubble burning in Punjab/Haryana' },
-      { name: 'Traffic', value: 28, color: 'bg-blue-500', icon: Car, source: 'Vehicular emissions' },
-      { name: 'Industry', value: 18, color: 'bg-purple-500', icon: Factory, source: 'Industrial emissions' },
-      { name: 'Construction Dust', value: 12, color: 'bg-yellow-500', icon: Wind, source: 'Construction activities' },
-    ],
-    aiExplanation: "Analysis of satellite data (NASA MODIS) shows active fire counts 300% above normal in Punjab/Haryana. Combined with wind patterns from NW, biomass burning contributes 42% to Delhi's current AQI. Traffic congestion during peak hours adds to local accumulation.",
-    satelliteData: {
-      modis: "Fire count: 1,247 active fires in Punjab region",
-      isro: "Aerosol Optical Depth: 1.2 (Very High)",
-      windPattern: "NW winds at 15 km/h carrying smoke plume",
-    }
+  useEffect(() => {
+    const fetchSourceData = async () => {
+      if (!selectedLocation) return;
+      setIsLoading(true);
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/policy/source-identification",
+          { params: { location: selectedLocation, date: selectedDate } }
+        );
+        const data = response.data;
+        if (!data || !data.contributions) return;
+
+        const total = Object.values(data.contributions).reduce((a, b) => a + b, 0);
+        const chartData = [
+          { name: "Traffic",  value: data.contributions.traffic  || 0, color: "#3B82F6" },
+          { name: "Industry", value: data.contributions.industry || 0, color: "#8B5CF6" },
+          { name: "Dust",     value: data.contributions.dust     || 0, color: "#EAB308" },
+          { name: "Biomass",  value: data.contributions.biomass  || 0, color: "#F97316" }
+        ];
+
+        setSourceData({
+          dominant: data.dominant_source,
+          total,
+          contributions: [
+            { name: "Traffic",        value: data.contributions.traffic,  icon: Car,     color: "#3B82F6", source: "Vehicular emissions"  },
+            { name: "Industry",       value: data.contributions.industry, icon: Factory, color: "#8B5CF6", source: "Industrial emissions"  },
+            { name: "Dust",           value: data.contributions.dust,     icon: Wind,    color: "#EAB308", source: "Construction dust"     },
+            { name: "Biomass Burning",value: data.contributions.biomass,  icon: Flame,   color: "#F97316", source: "Crop burning"          }
+          ],
+          aiExplanation: data.ai_explanation,
+          chartData
+        });
+      } catch (error) {
+        console.error("API Error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchSourceData();
+  }, [selectedLocation, selectedDate]);
+
+  const renderChart = () => {
+    if (!sourceData?.chartData || isLoading) return null;
+    return (
+      <ResponsiveContainer width="100%" height={300}>
+        {activeView === "pie" ? (
+          <RePieChart>
+            <Pie data={sourceData.chartData} cx="50%" cy="50%" outerRadius={100} dataKey="value" nameKey="name">
+              {sourceData.chartData.map((entry, i) => (
+                <Cell key={i} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e3a5f", borderRadius: 12, color: "#fff" }} />
+            <Legend wrapperStyle={{ color: "#94a3b8" }} />
+          </RePieChart>
+        ) : (
+          <BarChart data={sourceData.chartData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.07)" />
+            <XAxis dataKey="name" stroke="#64748b" fontSize={13} />
+            <YAxis stroke="#64748b" fontSize={12} />
+            <Tooltip contentStyle={{ background: "#0f172a", border: "1px solid #1e3a5f", borderRadius: 12, color: "#fff" }} />
+            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+              {sourceData.chartData.map((entry, i) => (
+                <Cell key={i} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        )}
+      </ResponsiveContainer>
+    );
   };
 
   return (
-    <>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "linear-gradient(135deg, #030712 0%, #0f172a 60%, #1e293b 100%)" }}>
       <PolicySidebar />
-      <main className="main-content">
-        {/* Header */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-white">Source Identification</h1>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2 bg-blue-deep rounded-lg border border-blue-medium px-4 py-2">
-            <Calendar className="h-4 w-4 text-gray-400" />
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent text-sm text-gray-300 focus:outline-none"
-            />
-          </div>
-          <div className="relative">
-            <select
-              value={selectedLocation}
-              onChange={(e) => setSelectedLocation(e.target.value)}
-              className="appearance-none bg-blue-deep border border-blue-medium text-gray-300 px-4 py-2 pr-10 rounded-lg text-sm focus:outline-none focus:border-blue-accent"
-            >
-              {locations.map(loc => (
-                <option key={loc} value={loc}>{loc}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
-          </div>
-          <button className="p-2 bg-blue-accent/20 text-blue-accent rounded-lg hover:bg-blue-accent/30 transition-colors">
-            <Download className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
 
-      {/* Location and Date Display */}
-      <div className="flex items-center space-x-4 text-sm text-gray-400">
-        <div className="flex items-center space-x-1">
-          <MapPin className="h-4 w-4" />
-          <span>{selectedLocation}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <Calendar className="h-4 w-4" />
-          <span>{new Date(selectedDate).toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-          })}</span>
-        </div>
-      </div>
+      <main style={{ marginLeft: 256, flex: 1, overflowY: "auto", padding: "2rem" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Source Contribution Chart */}
-        <div className="card lg:col-span-2">
-          <h2 className="text-lg font-semibold mb-4">Source Contribution Breakdown</h2>
-          
-          {/* Dominant Source Highlight */}
-          <div className="mb-6 p-4 bg-orange-500/10 border border-orange-500/30 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-500/20 rounded-full">
-                <Flame className="h-6 w-6 text-orange-400" />
+          {/* HEADER */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1.5rem", marginBottom: "2rem" }}>
+            <div>
+              <h1 style={{ fontSize: "2rem", fontWeight: 900, background: "linear-gradient(to right, #fff, #93c5fd)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", marginBottom: "0.4rem" }}>
+                Source Identification
+              </h1>
+              <p style={{ color: "#94a3b8", fontSize: "0.95rem" }}>AI-powered pollution source analysis</p>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+              {/* DATE */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(15,23,42,0.9)", border: "1px solid #1e3a5f", borderRadius: 14, padding: "0.6rem 1rem" }}>
+                <Calendar size={16} color="#64748b" />
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  style={{ background: "transparent", border: "none", outline: "none", color: "#e2e8f0", fontSize: "0.9rem", fontWeight: 600 }}
+                />
               </div>
-              <div>
-                <p className="text-sm text-gray-400">Dominant Source</p>
-                <p className="text-xl font-bold text-white">{sourceData.dominant}</p>
-                <p className="text-sm text-orange-400">42% of total pollution</p>
+
+              {/* LOCATION */}
+              <div style={{ position: "relative" }}>
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => setSelectedLocation(e.target.value)}
+                  style={{
+                    appearance: "none",
+                    background: "rgba(15,23,42,0.95)",
+                    border: "1px solid #1e3a5f",
+                    borderRadius: 14,
+                    color: "#e2e8f0",
+                    padding: "0.6rem 2.5rem 0.6rem 1rem",
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    outline: "none",
+                    cursor: "pointer",
+                    minWidth: 220
+                  }}
+                >
+                  <option value="" disabled style={{ background: "#0f172a", color: "#94a3b8" }}>Select Location</option>
+                  {locations.map((loc) => (
+                    <option key={loc} value={loc} style={{ background: "#0f172a", color: "#e2e8f0" }}>{loc}</option>
+                  ))}
+                </select>
+                <ChevronDown size={16} color="#64748b" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
               </div>
+
+              <button style={{ padding: "0.6rem 0.9rem", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.4)", borderRadius: 14, color: "#60a5fa", cursor: "pointer" }}>
+                <Download size={18} />
+              </button>
             </div>
           </div>
 
-          {/* Contribution Bars */}
-          <div className="space-y-6">
-            {sourceData.contributions.map((source) => {
-              const Icon = source.icon;
-              return (
-                <div key={source.name} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <Icon className="h-5 w-5 text-gray-400" />
-                      <span className="font-medium">{source.name}</span>
-                      <span className="text-xs text-gray-500">({source.source})</span>
-                    </div>
-                    <span className="text-lg font-bold text-blue-accent">{source.value}%</span>
+          {/* LOCATION BAR */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", background: "rgba(15,23,42,0.6)", border: "1px solid #1e3a5f", borderRadius: 14, padding: "0.75rem 1.25rem", marginBottom: "1.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#cbd5e1" }}>
+              <MapPin size={16} color="#3b82f6" />
+              <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>{selectedLocation || "Loading..."}</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "#cbd5e1" }}>
+              <Calendar size={16} color="#3b82f6" />
+              <span style={{ fontSize: "0.9rem" }}>{selectedDate}</span>
+            </div>
+            {sourceData && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "#60a5fa", fontWeight: 700, fontSize: "0.9rem" }}>
+                <TrendingUp size={15} />
+                <span>{sourceData.total?.toFixed(1)}% sources identified</span>
+              </div>
+            )}
+          </div>
+
+          {/* LOADING */}
+          {isLoading && (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: 300 }}>
+              <div style={{ width: 48, height: 48, border: "3px solid transparent", borderTop: "3px solid #3b82f6", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+            </div>
+          )}
+
+          {/* MAIN GRID */}
+          {!isLoading && sourceData && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+
+              {/* LEFT — Chart */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* TABS */}
+                <div style={{ display: "flex", gap: "0.5rem", background: "rgba(15,23,42,0.8)", border: "1px solid #1e3a5f", borderRadius: 14, padding: "0.4rem" }}>
+                  {[{ key: "bars", icon: BarChart3, label: "Bar Chart" }, { key: "pie", icon: PieChart, label: "Pie Chart" }].map(({ key, icon: Icon, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveView(key)}
+                      style={{
+                        flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "0.4rem",
+                        padding: "0.55rem 1rem", borderRadius: 10, border: "none", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600, transition: "all 0.2s",
+                        background: activeView === key ? "linear-gradient(to right, #3b82f6, #2563eb)" : "transparent",
+                        color: activeView === key ? "#fff" : "#64748b"
+                      }}
+                    >
+                      <Icon size={15} />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* CHART CARD */}
+                <div style={{ background: "rgba(15,23,42,0.9)", border: "1px solid #1e3a5f", borderRadius: 20, padding: "1.5rem", flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                    <h2 style={{ color: "#f1f5f9", fontWeight: 800, fontSize: "1.1rem" }}>Source Breakdown</h2>
+                    <span style={{ color: "#64748b", fontSize: "0.8rem" }}>{sourceData.total?.toFixed(1)}% total</span>
                   </div>
-                  <div className="w-full bg-blue-medium rounded-full h-3">
-                    <div 
-                      className={`${source.color} h-3 rounded-full transition-all duration-500`} 
-                      style={{ width: `${source.value}%` }}
-                    ></div>
+                  {renderChart()}
+                </div>
+
+                {/* AI INSIGHTS */}
+                <div style={{ background: "rgba(59,130,246,0.05)", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 20, padding: "1.25rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.75rem" }}>
+                    <Info size={18} color="#3b82f6" />
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.95rem" }}>AI Analysis</h3>
+                  </div>
+                  <p style={{ color: "#cbd5e1", fontSize: "0.875rem", lineHeight: 1.7 }}>{sourceData.aiExplanation}</p>
+                </div>
+              </div>
+
+              {/* RIGHT — Stats */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                {/* DOMINANT SOURCE */}
+                <div style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.3)", borderRadius: 20, padding: "1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div style={{ background: "rgba(249,115,22,0.2)", borderRadius: 14, padding: "0.9rem", flexShrink: 0 }}>
+                    <Flame size={28} color="#fb923c" />
+                  </div>
+                  <div>
+                    <p style={{ color: "#fb923c", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.3rem" }}>Dominant Source</p>
+                    <p style={{ color: "#fff", fontSize: "1.75rem", fontWeight: 900, textTransform: "capitalize" }}>{sourceData.dominant}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* AI Explanation */}
-          <div className="mt-6 p-4 bg-blue-accent/10 rounded-lg border border-blue-accent/30">
-            <div className="flex items-start space-x-3">
-              <Info className="h-5 w-5 text-blue-accent flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-blue-accent mb-1">AI Analysis</p>
-                <p className="text-sm text-gray-300">{sourceData.aiExplanation}</p>
+                {/* CONTRIBUTION LIST */}
+                <div style={{ background: "rgba(15,23,42,0.9)", border: "1px solid #1e3a5f", borderRadius: 20, padding: "1.25rem", flex: 1 }}>
+                  <h3 style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "0.95rem", marginBottom: "1rem" }}>Contribution Summary</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {sourceData.contributions.map((s) => {
+                      const Icon = s.icon;
+                      return (
+                        <div key={s.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "0.75rem 1rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                            <div style={{ background: `${s.color}22`, border: `1px solid ${s.color}55`, borderRadius: 10, padding: "0.5rem" }}>
+                              <Icon size={18} color={s.color} />
+                            </div>
+                            <div>
+                              <p style={{ color: "#f1f5f9", fontWeight: 600, fontSize: "0.9rem" }}>{s.name}</p>
+                              <p style={{ color: "#64748b", fontSize: "0.75rem" }}>{s.source}</p>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <p style={{ color: s.color, fontWeight: 800, fontSize: "1.2rem" }}>{s.value?.toFixed(1)}%</p>
+                            <div style={{ width: 80, height: 4, background: "#1e293b", borderRadius: 4, marginTop: 4 }}>
+                              <div style={{ width: `${Math.min(s.value, 100)}%`, height: "100%", background: s.color, borderRadius: 4 }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Satellite Data & References */}
-        <div className="card lg:col-span-1">
-          <div className="flex items-center space-x-2 mb-4">
-            <Satellite className="h-5 w-5 text-blue-accent" />
-            <h2 className="text-lg font-semibold">Satellite Data</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="p-3 bg-blue-medium/30 rounded-lg">
-              <p className="text-sm font-medium text-blue-accent mb-1">NASA MODIS</p>
-              <p className="text-sm text-gray-300">{sourceData.satelliteData.modis}</p>
-              <p className="text-xs text-gray-500 mt-1">Updated: 2 hours ago</p>
-            </div>
-            
-            <div className="p-3 bg-blue-medium/30 rounded-lg">
-              <p className="text-sm font-medium text-blue-accent mb-1">ISRO</p>
-              <p className="text-sm text-gray-300">{sourceData.satelliteData.isro}</p>
-              <p className="text-xs text-gray-500 mt-1">AOD measurement</p>
-            </div>
-            
-            <div className="p-3 bg-blue-medium/30 rounded-lg">
-              <p className="text-sm font-medium text-blue-accent mb-1">Wind Pattern</p>
-              <p className="text-sm text-gray-300">{sourceData.satelliteData.windPattern}</p>
-              <div className="mt-2 h-16 bg-blue-medium/50 rounded flex items-center justify-center">
-                <span className="text-xs text-gray-500">Wind direction map</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-blue-medium">
-            <h3 className="text-sm font-medium mb-2">Agency References</h3>
-            <div className="space-y-2">
-              <a href="#" className="block text-xs text-blue-accent hover:underline">CPCB Monitoring Data - Nov 2024</a>
-              <a href="#" className="block text-xs text-blue-accent hover:underline">NASA FIRMS Fire Data - Active Fires</a>
-              <a href="#" className="block text-xs text-blue-accent hover:underline">ISRO SAFAR - Aerosol Analysis</a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Historical Comparison */}
-      <div className="card">
-        <h2 className="text-lg font-semibold mb-4">Source Pattern History (Last 7 Days)</h2>
-        <div className="h-48 flex items-end justify-between space-x-2">
-          {[65, 58, 72, 68, 82, 75, 42].map((value, index) => (
-            <div key={index} className="flex-1 flex flex-col items-center">
-              <div className="w-full bg-gradient-to-t from-orange-500 to-orange-400 rounded-t-lg" style={{ height: `${value}%` }}>
-                <div className="text-center text-xs text-white pt-1">{value}%</div>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">D{index + 1}</div>
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-gray-400 text-center mt-4">
-          Biomass burning contribution trend - Peak on Day 5 (82%) due to increased stubble burning activity
-        </p>
-      </div>
+          )}
         </div>
       </main>
-    </>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+      `}</style>
+    </div>
   );
 };
 
 export default SourceIdentification;
-
-
-
-
-
-
-
-
-
-
-
-

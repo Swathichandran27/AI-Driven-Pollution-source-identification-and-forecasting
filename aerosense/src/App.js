@@ -45,8 +45,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Policy Maker Imports
 import PolicyOverview from "./pages/PolicyMaker/PolicyOverview";
-import SourceIdentification from "./pages/PolicyMaker/SourceIdentification";
-import ForecastTrends from "./pages/PolicyMaker/ForecastTrends";
+import SourceIdentification from "./pages/PolicyMaker/sourceidentification";
+import ForecastTrends from "./pages/PolicyMaker/forecasttrends";
 import PolicyRecommendations from "./pages/PolicyMaker/PolicyRecommendations";
 
 // Citizen Dashboard Imports
@@ -61,25 +61,15 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Citizen Routes - Main user facing pages */}
-        <Route path="/" element={<CitizenHome />} />
-        <Route path="/live-map" element={<LiveAQIMap />} />
-        <Route path="/aqi-dashboard" element={<AQIDashboard />} />
-        <Route path="/source-analysis" element={<SourceAnalysis />} />
-        <Route path="/forecast-alerts" element={<ForecastAlerts />} />
-        <Route path="/health-advisory" element={<HealthAdvisory />} />
-
+        {/* Default Route */}
+        <Route path="/" element={<PolicyOverview />} />
+        
         {/* Policy Maker Routes - Admin/Government facing pages */}
         <Route path="/policy" element={<PolicyOverview />} />
         <Route path="/policy/overview" element={<PolicyOverview />} />
         <Route path="/policy/source-identification" element={<SourceIdentification />} />
         <Route path="/policy/forecast" element={<ForecastTrends />} />
         <Route path="/policy/recommendations" element={<PolicyRecommendations />} />
-        
-        {/* Redirect any old policy paths to new ones */}
-        <Route path="/policy/dashboard" element={<PolicyOverview />} />
-        <Route path="/policy/interventions" element={<PolicyRecommendations />} />
-        <Route path="/policy/reports" element={<ForecastTrends />} />
       </Routes>
     </Router>
   );
