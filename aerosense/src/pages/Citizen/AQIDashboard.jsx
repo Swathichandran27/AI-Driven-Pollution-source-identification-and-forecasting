@@ -16,7 +16,7 @@ import {
   Car,
   Flame
 } from 'lucide-react';
-import HeatMap from "../../components/HeatMap";
+import HeatMap from "../../components/Map/HeatMap";
 
 const AQIDashboard = () => {
   const [selectedLocation, setSelectedLocation] = useState('Anand Vihar, Delhi');
