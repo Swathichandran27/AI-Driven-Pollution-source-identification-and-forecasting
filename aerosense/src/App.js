@@ -14,13 +14,14 @@ import AQIDashboard from "./pages/Citizen/AQIDashboard";
 import SourceAnalysis from "./pages/Citizen/SourceAnalysis";
 import ForecastAlerts from "./pages/Citizen/ForecastAlerts";
 import HealthAdvisory from "./pages/Citizen/HealthAdvisory";
+import Home from "./pages/Home/HomePage"; 
 
 function App() {
   return (
     <Router>
       <Routes>
         {/* Citizen Routes - Main user facing pages */}
-        <Route path="/" element={<CitizenHome />} />
+        <Route path="/" element={<Home />} />
         <Route path="/live-map" element={<LiveAQIMap />} />
         <Route path="/aqi-dashboard" element={<AQIDashboard />} />
         <Route path="/source-analysis" element={<SourceAnalysis />} />
