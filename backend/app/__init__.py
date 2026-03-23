@@ -40,6 +40,12 @@ def create_app():
     from app.routes import api
     from app.policy_routes import policy_bp
     from app.citizen_routes import citizen_bp
+    from app.models import User
+    from .test_route import route_bp
+
+  # 👈 ADD THIS
+
+      # 👈 ADD THIS
 
     # =========================
     # REGISTER BLUEPRINTS
@@ -48,7 +54,7 @@ def create_app():
     app.register_blueprint(api)
     app.register_blueprint(policy_bp)
     app.register_blueprint(citizen_bp)
-
+    app.register_blueprint(route_bp, url_prefix="/api")  # 👈 ADD THIS
     # =========================
     # CREATE TABLES
     # =========================
