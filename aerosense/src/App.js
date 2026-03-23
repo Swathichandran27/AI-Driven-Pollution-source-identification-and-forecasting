@@ -42,6 +42,7 @@
 
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import LayoutWrapper from "./components/Layout/Layout";
 
 // Policy Maker Imports
 import PolicyOverview from "./pages/PolicyMaker/PolicyOverview";
@@ -61,15 +62,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Default Route */}
-        <Route path="/" element={<PolicyOverview />} />
-        
-        {/* Policy Maker Routes - Admin/Government facing pages */}
-        <Route path="/policy" element={<PolicyOverview />} />
-        <Route path="/policy/overview" element={<PolicyOverview />} />
-        <Route path="/policy/source-identification" element={<SourceIdentification />} />
-        <Route path="/policy/forecast" element={<ForecastTrends />} />
-        <Route path="/policy/recommendations" element={<PolicyRecommendations />} />
+        <Route element={<LayoutWrapper />}>
+          <Route index element={<CitizenHome />} />
+          <Route path="live-map" element={<LiveAQIMap />} />
+          <Route path="aqi-dashboard" element={<AQIDashboard />} />
+          <Route path="source-analysis" element={<SourceAnalysis />} />
+          <Route path="forecast-alerts" element={<ForecastAlerts />} />
+          <Route path="health-advisory" element={<HealthAdvisory />} />
+        </Route>
+
+        {/* Policy Maker Routes (still accessible) */}
+        <Route path="/policy">
+          <Route index element={<PolicyOverview />} />
+          <Route path="overview" element={<PolicyOverview />} />
+          <Route path="source-identification" element={<SourceIdentification />} />
+          <Route path="forecast" element={<ForecastTrends />} />
+          <Route path="recommendations" element={<PolicyRecommendations />} />
+        </Route>
       </Routes>
     </Router>
   );

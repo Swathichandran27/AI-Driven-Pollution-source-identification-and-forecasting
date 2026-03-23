@@ -1,5 +1,5 @@
 // src/pages/Citizen/HealthAdvisory.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // import { 
 //   ArrowLeft,
 //   Heart,
@@ -76,6 +76,8 @@ import {
 } from 'lucide-react';
 
 import { Link } from 'react-router-dom';
+import api from '../../api/citizenApi';
+import Card from '../../components/UI/Card';
 
 const HealthAdvisory = () => {
   const [userProfile, setUserProfile] = useState({
@@ -91,9 +93,17 @@ const HealthAdvisory = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [savedAdvice, setSavedAdvice] = useState([]);
 
-  // Mock AQI data
-  const currentAQI = 312;
-  const currentCategory = 'Very Unhealthy';
+  // backend-driven state
+  const [stations, setStations] = useState([]);
+  const [selectedStation, setSelectedStation] = useState('Anand Vihar, Delhi');
+  const [healthData, setHealthData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [backendAlerts, setBackendAlerts] = useState([]);
+
+  // Mock AQI data (fallback) — replaced by backend when available
+  const currentAQI = healthData?.aqi ?? 312;
+  const currentCategory = healthData?.category ?? 'Very Unhealthy';
 
   // Health categories
   const healthCategories = [
@@ -308,37 +318,137 @@ const HealthAdvisory = () => {
     return 'bg-red-100';
   };
 
-  const filteredRecommendations = selectedCategory === 'all' 
-    ? recommendations 
-    : recommendations.filter(rec => rec.category === selectedCategory);
+  const formatNumber = (v, digits = 0) => {
+    if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
+    try { return new Intl.NumberFormat('en-IN', { maximumFractionDigits: digits }).format(Number(v)); }
+    catch (e) { return String(Math.round(Number(v))); }
+  };
+
+  const barWidthPct = (val, max = 500) => `${(Math.min(Math.max(Number(val) || 0, 0), max) / max) * 100}%`;
+
+  // Fetch stations and health advisory from backend
+  useEffect(() => {
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    let mounted = true;
+
+    const fetchStations = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/stations`);
+        const json = res.ok ? await res.json() : [];
+        if (mounted) {
+          setStations(json.map(s => s.station));
+          if (!selectedStation && json[0]) setSelectedStation(json[0].station || json[0]);
+        }
+      } catch (e) {
+        console.error('Failed to fetch stations', e);
+      }
+    };
+
+    const fetchHealth = async (station) => {
+      try {
+        setLoading(true);
+
+        let json = null;
+
+        // Prefer POST with user profile if api helper available
+        try {
+          json = await api.postHealthAdvisory({ station: station || null, profile: userProfile });
+        } catch (e) {
+          // fallback to GET
+          try {
+            json = await api.getHealthAdvisory({ station: station || null });
+          } catch (err) {
+            console.warn('Health advisory GET fallback failed', err);
+            json = null;
+          }
+        }
+
+        if (mounted && json) {
+          setHealthData(json);
+        }
+
+        // Dashboard pollutants fallback: merge if healthData missing pollutants
+        try {
+          const dbj = await api.getDashboard();
+          if (mounted && dbj && station) {
+            const match = dbj.find(s => s.station === station || (s.station && s.station.toLowerCase() === station.toLowerCase()));
+            if (match && match.pollutants) {
+              setHealthData(prev => ({ ...(prev||{}), pollutants: prev?.pollutants || match.pollutants }));
+            }
+          }
+        } catch (e) {
+          // ignore dashboard fallback errors
+        }
+
+        if (mounted) {
+          if (json?.alerts && Array.isArray(json.alerts)) setBackendAlerts(json.alerts);
+          setLastUpdated(json?.updated_at || new Date().toISOString());
+          setLoading(false);
+        }
+      } catch (e) {
+        console.error('Failed to fetch health advisory', e);
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchStations().then(() => fetchHealth(selectedStation));
+    const id = setInterval(() => fetchHealth(selectedStation), 30000);
+    return () => { mounted = false; clearInterval(id); };
+  }, [selectedStation]);
+
+  const availableRecommendations = healthData?.recommendations && Array.isArray(healthData.recommendations)
+    ? healthData.recommendations
+    : recommendations;
+
+  const filteredRecommendations = selectedCategory === 'all'
+    ? availableRecommendations
+    : availableRecommendations.filter(rec => rec.category === selectedCategory);
+
+  const alertsToRender = (backendAlerts && backendAlerts.length)
+    ? backendAlerts.map((a, i) => {
+        if (typeof a === 'string') return { id: `b-${i}`, title: a.split('.')[0], message: a, time: 'just now', type: a.toLowerCase().includes('avoid') ? 'warning' : 'info' };
+        return { id: a.id || `b-${i}`, type: a.type || 'info', title: a.title || a.message?.split?.('.')[0] || 'Alert', message: a.message || '', time: a.time || 'just now', severity: a.severity || a.level };
+      })
+    : healthAlerts;
+
+  const routesToShow = (healthData && Array.isArray(healthData.routes)) ? healthData.routes : safeRoutes;
+  const forecastToShow = (healthData && Array.isArray(healthData.forecast)) ? healthData.forecast : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0B0F19] text-gray-200">
+      <main className="p-6 w-full">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="sticky top-0 z-10 backdrop-blur-sm bg-black/40 border-b border-[#071526] mb-4">
+        <div className="py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeft size={20} className="text-gray-600" />
+              <Link to="/" className="p-2 rounded-lg">
+                <ArrowLeft size={20} className="text-gray-300" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Health Advisory</h1>
-                <p className="text-sm text-gray-500">Personalized recommendations based on AQI</p>
+                <h1 className="text-2xl font-bold text-white">Health Advisory</h1>
+                <p className="text-sm text-gray-300">Personalized recommendations based on AQI</p>
+              </div>
+              <div className="ml-6">
+                <label className="text-sm text-gray-300 mr-2">Station</label>
+                <select aria-label="Select station" value={selectedStation} onChange={(e)=>setSelectedStation(e.target.value)} className="px-3 py-2 border rounded bg-transparent text-gray-200 focus:ring-2 focus:ring-blue-accent">
+                  {stations.length ? stations.map((st, i)=>(<option key={i} value={st}>{st}</option>)) : (<option>Loading stations...</option>)}
+                </select>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button 
+                aria-label="Edit profile"
                 onClick={() => setShowProfileEdit(!showProfileEdit)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg"
               >
-                <Edit2 size={20} className="text-gray-600" />
+                <Edit2 size={20} className="text-gray-300 cursor-pointer" />
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Bell size={20} className="text-gray-600" />
+              <button aria-label="Notifications" className="p-2 rounded-lg">
+                <Bell size={20} className="text-gray-300 cursor-pointer" />
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Share2 size={20} className="text-gray-600" />
+              <button aria-label="Share advisory" className="p-2 rounded-lg">
+                <Share2 size={20} className="text-gray-300 cursor-pointer" />
               </button>
             </div>
           </div>
@@ -347,13 +457,13 @@ const HealthAdvisory = () => {
 
       {/* Profile Edit Panel */}
       {showProfileEdit && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="bg-white rounded-xl shadow-sm p-6 border-2 border-blue-100">
+        <div className="mb-4">
+          <Card className="bg-[#111827] p-6 border border-[#071526]">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-900">Your Health Profile</h3>
+              <h3 className="font-semibold text-white">Your Health Profile</h3>
               <button 
                 onClick={() => setShowProfileEdit(false)}
-                className="text-blue-600 text-sm font-medium hover:text-blue-700"
+                className="text-blue-accent text-sm font-medium hover:brightness-95"
               >
                 <Save size={18} />
               </button>
@@ -424,90 +534,100 @@ const HealthAdvisory = () => {
                 </label>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
+        {!lastUpdated && (
+          <div className="mb-4">
+            <div className="rounded-md bg-yellow-800/30 border-l-4 border-yellow-600 p-3 text-yellow-300">
+              <strong>Mock data:</strong> Health advisory may be showing fallback/mock data until live backend responds.
+            </div>
+          </div>
+        )}
         {/* Current Health Risk Banner */}
-        <div className={`${getAQIBgLight(currentAQI)} rounded-xl p-6 mb-6`}>
+        <Card className={`${getAQIBgLight(currentAQI)} mb-6 p-6`}>
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div className="flex items-start gap-4">
               <div className={`p-3 rounded-full ${getAQIBgLight(currentAQI)}`}>
                 <HeartPulse size={32} className={getAQITextColor(currentAQI)} />
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">Current Health Risk Level</p>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                <p className="text-sm text-gray-300 mb-1">Current Health Risk Level</p>
+                <h2 className="text-2xl font-bold text-white mb-1">
                   {currentCategory} - High Risk
                 </h2>
-                <p className="text-gray-700 max-w-2xl">
-                  {userProfile.sensitiveGroup || userProfile.healthConditions[0] !== 'none'
+                <p className="text-gray-300 max-w-2xl">
+                  {healthData?.advisory ? (
+                    healthData.advisory.general
+                  ) : (userProfile.sensitiveGroup || userProfile.healthConditions[0] !== 'none'
                     ? 'You are in sensitive group. Please take extra precautions and limit outdoor exposure.'
-                    : 'General population may experience health effects. Consider reducing outdoor activities.'}
+                    : 'General population may experience health effects. Consider reducing outdoor activities.')}
                 </p>
+                <div className="text-xs text-gray-400 mt-2">Last updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : '—'} {lastUpdated && <span className="inline-block ml-2 px-2 py-0.5 bg-green-800 text-green-300 rounded text-xs">Live</span>}</div>
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <button className="px-4 py-2 bg-blue-accent text-black rounded-lg hover:brightness-95">
                 Set Reminder
               </button>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+              <button className="px-4 py-2 border border-blue-medium rounded-lg hover:bg-black/10 text-gray-200">
                 Share
               </button>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Quick Health Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Clock size={20} className="text-blue-600" />
+              <div className="p-2 bg-black/20 rounded-lg">
+                <Clock size={20} className="text-blue-accent" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Safe Window Today</p>
-                <p className="font-semibold text-gray-900">6:00 - 8:00 AM</p>
+                <p className="text-xs text-gray-300">Safe Window Today</p>
+                <p className="font-semibold text-white">6:00 - 8:00 AM</p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Wind size={20} className="text-green-600" />
+              <div className="p-2 bg-black/20 rounded-lg">
+                <Wind size={20} className="text-green-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Mask Recommended</p>
-                <p className="font-semibold text-green-600">N95 Required</p>
+                <p className="text-xs text-gray-300">Mask Recommended</p>
+                <p className="font-semibold text-green-400">N95 Required</p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Droplets size={20} className="text-purple-600" />
+              <div className="p-2 bg-black/20 rounded-lg">
+                <Droplets size={20} className="text-purple-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Hydration Needed</p>
-                <p className="font-semibold text-gray-900">8-10 glasses</p>
+                <p className="text-xs text-gray-300">Hydration Needed</p>
+                <p className="font-semibold text-white">8-10 glasses</p>
               </div>
             </div>
-          </div>
+          </Card>
 
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Activity size={20} className="text-orange-600" />
+              <div className="p-2 bg-black/20 rounded-lg">
+                <Activity size={20} className="text-orange-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Exercise Today</p>
-                <p className="font-semibold text-orange-600">Indoor only</p>
+                <p className="text-xs text-gray-300">Exercise Today</p>
+                <p className="font-semibold text-orange-400">Indoor only</p>
               </div>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Category Filter */}
@@ -518,8 +638,8 @@ const HealthAdvisory = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
                 selectedCategory === category.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-accent text-black'
+                  : 'bg-black/20 text-gray-300 hover:bg-black/30'
               }`}
             >
               {category.icon}
@@ -649,10 +769,10 @@ const HealthAdvisory = () => {
             {/* Real-time Health Alerts */}
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Health Alerts</h2>
-              
+
               <div className="space-y-3">
-                {healthAlerts.map((alert) => (
-                  <div key={alert.id} className={`p-3 rounded-lg ${
+                {alertsToRender.map((alert, idx) => (
+                  <div key={alert.id || idx} className={`p-3 rounded-lg ${
                     alert.type === 'warning' ? 'bg-red-50' :
                     alert.type === 'info' ? 'bg-blue-50' : 'bg-green-50'
                   }`}>
@@ -673,7 +793,7 @@ const HealthAdvisory = () => {
                   </div>
                 ))}
               </div>
-              
+
               <button className="w-full mt-4 text-center text-sm text-blue-600 hover:text-blue-700">
                 View all alerts
               </button>
@@ -684,7 +804,7 @@ const HealthAdvisory = () => {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Safe Routes Today</h2>
               
               <div className="space-y-3">
-                {safeRoutes.map((route) => (
+                {routesToShow.map((route) => (
                   <div key={route.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -757,39 +877,60 @@ const HealthAdvisory = () => {
             <button className="text-blue-600 text-sm font-medium">Customize</button>
           </div>
           
-          <div className="grid grid-cols-7 gap-2">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
-              <div key={idx} className="text-center">
-                <p className="text-xs text-gray-500 mb-2">{day}</p>
-                <div className={`p-2 rounded-lg ${
-                  idx === 0 ? 'bg-red-100' : 
-                  idx === 1 ? 'bg-orange-100' : 
-                  idx === 2 ? 'bg-orange-100' : 
-                  idx === 3 ? 'bg-yellow-100' : 
-                  'bg-green-100'
-                }`}>
-                  <p className="text-xs font-medium">
-                    {idx === 0 ? 'AQI 312' : 
-                     idx === 1 ? 'AQI 285' : 
-                     idx === 2 ? 'AQI 245' : 
-                     idx === 3 ? 'AQI 198' : 
-                     'AQI 165'}
-                  </p>
+            <div className="grid grid-cols-7 gap-2">
+            {forecastToShow && forecastToShow.length ? (
+              forecastToShow.map((f, idx) => (
+                <div key={idx} className="text-center">
+                  <p className="text-xs text-gray-500 mb-2">{f.day || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx]}</p>
+                  <div className={`p-2 rounded-lg ${
+                    (f.aqi || 0) > 300 ? 'bg-red-100' : (f.aqi || 0) > 200 ? 'bg-orange-100' : (f.aqi || 0) > 100 ? 'bg-yellow-100' : 'bg-green-100'
+                  }`}>
+                    <p className="text-xs font-medium">AQI {f.aqi ?? '—'}</p>
+                  </div>
+                  <div className="mt-2">
+                    {f.advice ? (
+                      <span className="text-xs text-gray-700">{f.advice}</span>
+                    ) : (
+                      (f.aqi || 0) > 200 ? <span className="text-xs text-red-600">🚫 Outdoor</span> : <span className="text-xs text-green-600">✅ Safe</span>
+                    )}
+                  </div>
                 </div>
-                <div className="mt-2">
-                  {idx === 0 ? (
-                    <span className="text-xs text-red-600">🚫 Outdoor</span>
-                  ) : idx === 1 ? (
-                    <span className="text-xs text-orange-600">⚠️ Limited</span>
-                  ) : (
-                    <span className="text-xs text-green-600">✅ Safe</span>
-                  )}
+              ))
+            ) : (
+              ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
+                <div key={idx} className="text-center">
+                  <p className="text-xs text-gray-500 mb-2">{day}</p>
+                  <div className={`p-2 rounded-lg ${
+                    idx === 0 ? 'bg-red-100' : 
+                    idx === 1 ? 'bg-orange-100' : 
+                    idx === 2 ? 'bg-orange-100' : 
+                    idx === 3 ? 'bg-yellow-100' : 
+                    'bg-green-100'
+                  }`}>
+                    <p className="text-xs font-medium">
+                      {idx === 0 ? 'AQI 312' : 
+                       idx === 1 ? 'AQI 285' : 
+                       idx === 2 ? 'AQI 245' : 
+                       idx === 3 ? 'AQI 198' : 
+                       'AQI 165'}
+                    </p>
+                  </div>
+                  <div className="mt-2">
+                    {idx === 0 ? (
+                      <span className="text-xs text-red-600">🚫 Outdoor</span>
+                    ) : idx === 1 ? (
+                      <span className="text-xs text-orange-600">⚠️ Limited</span>
+                    ) : (
+                      <span className="text-xs text-green-600">✅ Safe</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

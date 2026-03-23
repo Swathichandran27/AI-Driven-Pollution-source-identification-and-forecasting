@@ -1,5 +1,6 @@
 // pages/Citizen/LiveAQIMap.jsx
 import React, { useState, useEffect, useCallback } from 'react';
+import Card from '../../components/UI/Card';
 import { 
   MapContainer, 
   TileLayer, 
@@ -49,6 +50,17 @@ ChartJS.register(
   Filler
 );
 
+const HARD_CODED_COORDS = {
+  'Anand Vihar': [28.6500, 77.3150],
+  'RK Puram': [28.5500, 77.1800],
+  'IIT Delhi': [28.5450, 77.1928],
+  'Punjabi Bagh': [28.6619, 77.1400],
+  'Dwarka': [28.5915, 77.0200],
+  'Lodhi Road': [28.5934, 77.2287],
+  'Patparganj': [28.6315, 77.2910],
+  'Anand Vihar Delhi': [28.6500, 77.3150]
+};
+
 const LiveAQIMap = () => {
   // State Management
   const [stations, setStations] = useState([]);
@@ -82,60 +94,59 @@ const LiveAQIMap = () => {
 //   }, []);
 
 
-// Replace mock data with real API call
-const API_KEY = process.env.REACT_APP_DATA_GOV_API_KEY ;
 const fetchLiveData = useCallback(async () => {
   try {
     setLoading(true);
-    
-    // Your CPCB API endpoint
-    // const response = await fetch(
-    //   `https://api.data.gov.in/resource/your-endpoint?api-key=${API_KEY}&format=json`
-    // );
-    const response = await fetch(
-  `https://api.data.gov.in/resource/381b7df3-bbe5-4d14-a8c8-d0bb7e8c07d0?api-key=${API_KEY}&format=json&limit=1000`
-);
+    // call backend dashboard endpoint
+    const res = await fetch(`${process.env.REACT_APP_API_BASE || 'http://localhost:5000'}/dashboard`);
+    if (!res.ok) throw new Error(`Status ${res.status}`);
+    const data = await res.json();
 
-console.log("API KEY:", API_KEY);
+    // map backend dashboard items to station objects with coords
+    const transformed = data.map((row, idx) => {
+      const name = row.station;
+      const coords = HARD_CODED_COORDS[name] || HARD_CODED_COORDS[`${name}`] || null;
+      const lat = coords ? coords[0] : (mapCenter[0] + (Math.random() - 0.5) * 0.1);
+      const lng = coords ? coords[1] : (mapCenter[1] + (Math.random() - 0.5) * 0.1);
 
+      return {
+        id: `${name}-${idx}`,
+        name: name,
+        city: row.city,
+        aqi: Number(row.aqi) || 0,
+        category: row.category || '',
+        dominant_source: row.dominant_source || row.dominant_pollutant || '',
+        pollutants: row.pollutants || {},
+        datetime: row.datetime,
+        lat,
+        lng
+      };
+    });
 
-    const data = await response.json();
-    
-    // Transform CPCB data to your format
-    const transformed = data.records.map(record => ({
-      id: record.station_id,
-      name: record.station_name,
-      lat: parseFloat(record.latitude),
-      lng: parseFloat(record.longitude),
-      aqi: parseInt(record.aqi),
-      pm25: parseFloat(record.pm25),
-      pm10: parseFloat(record.pm10),
-      no2: parseFloat(record.no2),
-      o3: parseFloat(record.o3),
-      temp: parseFloat(record.temperature),
-      humidity: parseFloat(record.humidity),
-      windSpeed: parseFloat(record.wind_speed),
-      lastUpdated: record.last_update
-    }));
-    
     setStations(transformed);
     setLastUpdated(new Date());
     calculateTopStations(transformed);
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error fetching dashboard:', error);
+    setStations([]);
   } finally {
     setLoading(false);
   }
-}, []);
+}, [mapCenter]);
 
   // Fetch trend data for selected station
-  const fetchTrendData = useCallback(async (stationId) => {
+  const fetchTrendData = useCallback(async (stationName) => {
     try {
-      const response = await fetch(`/api/cpcb/trend/${stationId}?range=${timeRange}`);
-      const data = await response.json();
-      setTrendData(data);
+      const res = await fetch(`${process.env.REACT_APP_API_BASE || 'http://localhost:5000'}/forecast?station=${encodeURIComponent(stationName)}`);
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+      const json = await res.json();
+      // Expect json.forecast = [{hour, datetime, aqi, category}, ...]
+      const labels = (json.forecast || []).map((f) => String(f.datetime || f.hour));
+      const values = (json.forecast || []).map((f) => Number(f.aqi) || 0);
+      setTrendData({ labels, values });
     } catch (error) {
       console.error('Error fetching trend:', error);
+      setTrendData(null);
     }
   }, [timeRange]);
 
@@ -218,17 +229,18 @@ console.log("API KEY:", API_KEY);
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50' : ''} min-h-screen bg-[#0B0F19] text-gray-200`}>
+      <main className="p-6 w-full">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="sticky top-0 z-10 backdrop-blur-sm bg-black/40 border-b border-[#071526] mb-4">
+        <div className="py-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Live AQI Monitor</h1>
-              <p className="text-sm text-gray-500 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-white">Live AQI Monitor</h1>
+              <p className="text-sm text-gray-300 flex items-center gap-2">
                 <span>Real-time data from CPCB monitoring stations</span>
                 {lastUpdated && (
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  <span className="text-xs bg-transparent px-2 py-1 rounded text-gray-300">
                     Last: {lastUpdated.toLocaleTimeString()}
                   </span>
                 )}
@@ -238,14 +250,14 @@ console.log("API KEY:", API_KEY);
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 rounded-lg"
               >
                 {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
               </button>
               <button
                 onClick={fetchLiveData}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-accent text-black rounded-lg hover:brightness-95 disabled:opacity-50"
               >
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
                 Refresh
@@ -255,61 +267,61 @@ console.log("API KEY:", API_KEY);
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div>
         {/* ✅ Top AQI Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           {/* Average AQI Card */}
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Average AQI</span>
               <Activity size={18} className="text-blue-500" />
             </div>
             <p className="text-2xl font-bold text-gray-900">{topStations.average}</p>
             <p className="text-xs text-gray-500">Across {stations.length} stations</p>
-          </div>
+          </Card>
 
           {/* Highest AQI Card */}
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Highest AQI</span>
               <AlertTriangle size={18} className="text-red-500" />
             </div>
             {topStations.highest && (
               <>
-                <p className="text-2xl font-bold text-red-600">{topStations.highest.aqi}</p>
-                <p className="text-xs text-gray-500 truncate">{topStations.highest.name}</p>
+                <p className="text-2xl font-bold text-red-400">{topStations.highest.aqi}</p>
+                <p className="text-xs text-gray-300 truncate">{topStations.highest.name}</p>
               </>
             )}
-          </div>
+          </Card>
 
           {/* Lowest AQI Card */}
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Lowest AQI</span>
               <Wind size={18} className="text-green-500" />
             </div>
             {topStations.lowest && (
               <>
-                <p className="text-2xl font-bold text-green-600">{topStations.lowest.aqi}</p>
-                <p className="text-xs text-gray-500 truncate">{topStations.lowest.name}</p>
+                <p className="text-2xl font-bold text-green-400">{topStations.lowest.aqi}</p>
+                <p className="text-xs text-gray-300 truncate">{topStations.lowest.name}</p>
               </>
             )}
-          </div>
+          </Card>
 
           {/* Critical Stations Card */}
-          <div className="bg-white rounded-xl shadow-sm p-4">
+          <Card className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Critical Stations</span>
               <span className="text-xs font-bold text-red-600">{topStations.critical.length}</span>
             </div>
             <div className="space-y-1">
               {topStations.critical.map((s, idx) => (
-                <p key={idx} className="text-xs text-gray-600 truncate">
+                <p key={idx} className="text-xs text-gray-300 truncate">
                   • {s.name}: {s.aqi}
                 </p>
               ))}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Controls Bar */}
@@ -389,19 +401,19 @@ console.log("API KEY:", API_KEY);
                           <div className="grid grid-cols-2 gap-2 text-sm">
                             <div>
                               <p className="text-gray-500">PM2.5</p>
-                              <p className="font-medium">{station.pm25} µg/m³</p>
+                              <p className="font-medium">{station.pollutants?.pm25 ?? '–'} µg/m³</p>
                             </div>
                             <div>
                               <p className="text-gray-500">PM10</p>
-                              <p className="font-medium">{station.pm10} µg/m³</p>
+                              <p className="font-medium">{station.pollutants?.pm10 ?? '–'} µg/m³</p>
                             </div>
                             <div>
                               <p className="text-gray-500">NO₂</p>
-                              <p className="font-medium">{station.no2} ppb</p>
+                              <p className="font-medium">{station.pollutants?.no2 ?? '–'}</p>
                             </div>
                             <div>
-                              <p className="text-gray-500">O₃</p>
-                              <p className="font-medium">{station.o3} ppb</p>
+                              <p className="text-gray-500">CO</p>
+                              <p className="font-medium">{station.pollutants?.co ?? '–'}</p>
                             </div>
                           </div>
 
@@ -510,10 +522,10 @@ console.log("API KEY:", API_KEY);
                   <h2 className="font-semibold text-gray-900 mb-3">Pollutant Levels</h2>
                   <div className="space-y-3">
                     {[
-                      { name: 'PM2.5', value: selectedStation.pm25, max: 250, color: 'bg-red-500' },
-                      { name: 'PM10', value: selectedStation.pm10, max: 350, color: 'bg-orange-500' },
-                      { name: 'NO₂', value: selectedStation.no2, max: 200, color: 'bg-yellow-500' },
-                      { name: 'O₃', value: selectedStation.o3, max: 100, color: 'bg-green-500' }
+                      { name: 'PM2.5', value: selectedStation.pollutants?.pm25 ?? 0, max: 250, color: 'bg-red-500' },
+                      { name: 'PM10', value: selectedStation.pollutants?.pm10 ?? 0, max: 350, color: 'bg-orange-500' },
+                      { name: 'NO₂', value: selectedStation.pollutants?.no2 ?? 0, max: 200, color: 'bg-yellow-500' },
+                      { name: 'CO', value: selectedStation.pollutants?.co ?? 0, max: 50, color: 'bg-green-500' }
                     ].map((pollutant) => (
                       <div key={pollutant.name}>
                         <div className="flex justify-between text-sm mb-1">
@@ -539,7 +551,8 @@ console.log("API KEY:", API_KEY);
             )}
           </div>
         </div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

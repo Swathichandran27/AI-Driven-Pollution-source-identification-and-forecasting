@@ -108,6 +108,7 @@
 
 
 
+import React from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup } from "react-leaflet";
 import { useEffect, useState } from "react";
 import Papa from "papaparse";
@@ -116,16 +117,44 @@ import "leaflet/dist/leaflet.css";
 
 export default function BubbleMap() {
   const [stations, setStations] = useState([]);
+  const [useBackend, setUseBackend] = useState(false);
 
   useEffect(() => {
-    fetch("/real_time_aqi_data.csv")
-      .then((res) => res.text())
-      .then((csvText) => {
-        const parsed = Papa.parse(csvText, {
-          header: true,
-          skipEmptyLines: true,
-        });
+    const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    let mounted = true;
 
+    const tryBackend = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/stations`);
+        if (!res.ok) throw new Error('No stations');
+        const json = await res.json();
+
+        // Check if backend provides coordinates
+        const hasCoords = json && json.length && (json[0].lat || json[0].latitude || json[0].lng || json[0].lon);
+        if (hasCoords) {
+          const mapped = json.map((s) => ({
+            lat: s.lat || s.latitude,
+            lng: s.lon || s.longitude || s.lng,
+            station: s.station || s.name || 'Station',
+            city: s.city || '',
+            overallAQI: s.aqi || s.aqi_value || 0
+          })).filter(s => s.lat && s.lng);
+
+          if (mounted && mapped.length) {
+            setStations(mapped);
+            setUseBackend(true);
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore and fallback to CSV
+      }
+
+      // fallback to CSV
+      try {
+        const res = await fetch('/real_time_aqi_data.csv');
+        const csvText = await res.text();
+        const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
         const data = parsed.data;
         const stationMap = {};
 
@@ -136,39 +165,35 @@ export default function BubbleMap() {
 
           if (!isNaN(lat) && !isNaN(lng) && !isNaN(value)) {
             const key = `${lat}_${lng}`;
-
             if (!stationMap[key]) {
               stationMap[key] = {
                 lat,
                 lng,
                 values: [],
-                station: row.station || "Unknown",
-                city: row.city || "Unknown",
+                station: row.station || 'Unknown',
+                city: row.city || 'Unknown'
               };
             }
-
             stationMap[key].values.push(value);
           }
         });
 
-        const finalStations = Object.values(stationMap)
-          .map((station) => {
-            if (station.values.length === 0) return null;
+        const finalStations = Object.values(stationMap).map((station) => {
+          if (!station.values.length) return null;
+          return { ...station, overallAQI: Math.max(...station.values) };
+        }).filter(Boolean);
 
-            const overallAQI = Math.max(...station.values);
+        if (mounted) {
+          setStations(finalStations);
+          setUseBackend(false);
+        }
+      } catch (err) {
+        console.error('Error loading CSV:', err);
+      }
+    };
 
-            return {
-              ...station,
-              overallAQI,
-            };
-          })
-          .filter(Boolean);
-
-        setStations(finalStations);
-      })
-      .catch((error) => {
-        console.error("Error loading CSV:", error);
-      });
+    tryBackend();
+    return () => { mounted = false; };
   }, []);
 
   const getColor = (aqi) => {
@@ -202,7 +227,16 @@ export default function BubbleMap() {
   };
 
   return (
-    <MapContainer
+    <>
+      {!useBackend && (
+        <div className="mb-4 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-md bg-yellow-50 border-l-4 border-yellow-400 p-3 text-yellow-800">
+            <strong>Mock data:</strong> Map is using local CSV data (real-time backend does not provide station coordinates).
+          </div>
+        </div>
+      )}
+
+      <MapContainer
       center={[28.6139, 77.2090]} // Delhi center coordinates
       zoom={10}
       minZoom={7}
@@ -302,5 +336,6 @@ export default function BubbleMap() {
         </div>
       )}
     </MapContainer>
+    </>
   );
 }
