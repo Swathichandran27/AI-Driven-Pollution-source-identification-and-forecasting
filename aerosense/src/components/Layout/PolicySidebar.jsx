@@ -17,7 +17,7 @@ const PolicySidebar = () => {
     { path: '/policy/source-identification', icon: Map, label: 'Source ID' },
     { path: '/policy/forecast', icon: TrendingUp, label: 'Forecast' },
     { path: '/policy/recommendations', icon: Target, label: 'Recommendations' },
-    { path: '/policy/route-planner', icon: Map, label: 'Route Planner' }
+    
   ];
 
   return (

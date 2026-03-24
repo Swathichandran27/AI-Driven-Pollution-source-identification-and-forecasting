@@ -35,18 +35,50 @@ body {
   box-shadow: 0 6px 18px rgba(2,6,23,0.5);
 }
 
+/* Dashboard specific panels and layout */
+.panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  padding: 1rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.5);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+
+.col-span-4 { grid-column: span 4 / span 4; }
+.col-span-6 { grid-column: span 6 / span 6; }
+.col-span-8 { grid-column: span 8 / span 8; }
+.col-span-12 { grid-column: span 12 / span 12; }
+
+.dashboard-hero {
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+}
+
 .main-content {
-  margin-left: 18rem; /* leave a little extra space for sidebar */
   min-height: 100vh;
   padding: 1.25rem;
+  padding-top: calc(1.25rem + 1rem); /* give extra space for sticky navbar */
   position: relative;
+  width: 100%;
+  max-width: none; /* allow full-width usage between sidebar and right edge */
+}
+
+/* Ensure content sits below sticky navbar and has breathing room */
+.main-content-inner {
+  padding-top: 0.5rem;
 }
 
 @media (max-width: 768px) {
   .main-content {
-    margin-left: 0; /* collapse sidebar on small screens */
     padding-left: 1rem;
     padding-right: 1rem;
+    max-width: 100%;
   }
 }
 

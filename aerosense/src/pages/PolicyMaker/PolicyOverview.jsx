@@ -72,7 +72,7 @@ const PolicyOverview = () => {
 
       <main style={{ 
         flex: 1, 
-        marginLeft: 256, 
+        marginLeft: 10, 
         padding: "2rem", 
         maxWidth: "calc(100vw - 256px)",
         overflowX: "hidden" 

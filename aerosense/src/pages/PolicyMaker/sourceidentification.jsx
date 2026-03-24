@@ -123,7 +123,7 @@ const SourceIdentification = () => {
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "linear-gradient(135deg, #030712 0%, #0f172a 60%, #1e293b 100%)" }}>
       <PolicySidebar />
 
-      <main style={{ marginLeft: 256, flex: 1, overflowY: "auto", padding: "2rem" }}>
+      <main style={{ marginLeft: 10, flex: 1, overflowY: "auto", padding: "2rem" }}>
         <div style={{ maxWidth: 1280, margin: "0 auto" }}>
 
           {/* HEADER */}

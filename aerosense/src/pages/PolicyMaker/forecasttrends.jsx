@@ -103,7 +103,7 @@ const ForecastTrends = () => {
     <div style={{ display: "flex", minHeight: "100vh", background: "#020617", color: "#f1f5f9" }}>
       <PolicySidebar />
 
-      <main style={{ flex: 1, marginLeft: 256, padding: "2rem", maxWidth: "calc(100vw - 256px)", overflowX: "hidden" }}>
+      <main style={{ flex: 1, marginLeft: 10, padding: "2rem", maxWidth: "calc(100vw - 256px)", overflowX: "hidden" }}>
         <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
           
           {/* HEADER */}

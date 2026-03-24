@@ -13,10 +13,10 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative h-screen overflow-hidden bg-gradient-to-br from-[#0A0F1C] via-[#0B1120] to-[#050A16]">
+    <div className="relative min-h-screen overflow-auto bg-gradient-to-br from-[#0A0F1C] via-[#0B1120] to-[#050A16]">
       {/* Animated gradient orbs */}
       <div
-        className="absolute top-1/4 -left-64 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse"
+        className="absolute top-1/4 -left-64 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] animate-pulse z-0"
         style={{
           transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
         }}
@@ -29,15 +29,15 @@ export default function Home() {
       />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(ellipse_at_center,_rgba(59,130,246,0.08)_0%,_transparent_70%)]" />
 
-      <div className="relative h-full flex items-center justify-center px-4 sm:px-6">
+      <div className="relative z-10 h-full flex items-center justify-center px-4 sm:px-6">
         <div className="w-full max-w-7xl bg-gradient-to-br from-[#0F1A3A]/90 via-[#111C44]/90 to-[#0A1230]/90 backdrop-blur-xl rounded-[48px] border border-white/10 shadow-2xl p-8 md:p-10 transition-all duration-500 hover:shadow-[0_0_80px_rgba(59,130,246,0.2)]">
           {/* Navbar */}
-          <div className="flex flex-wrap justify-between items-center gap-4 mb-12">
+          <div className="relative z-20 flex flex-wrap justify-between items-center gap-4 mb-12">
             <div className="flex items-center gap-2 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full group-hover:bg-blue-500/30 transition-all duration-500" />
                 <img
-                  src="/image1.png"
+                  src="/image.png"
                   alt="AeroSense Logo"
                   className="h-14 md:h-16 object-contain relative z-10 drop-shadow-lg"
                 />
@@ -50,7 +50,7 @@ export default function Home() {
             <div className="flex items-center gap-4 md:gap-6">
               <Link
                 to="/login?role=user"
-                className="relative group overflow-hidden px-5 py-2 rounded-full text-gray-300 hover:text-white transition-all duration-300"
+                className="relative z-30 group overflow-hidden px-5 py-2 rounded-full text-white hover:text-white transition-all duration-300"
               >
                 <span className="relative z-10">Login</span>
                 <div className="absolute inset-0 bg-white/5 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300" />

@@ -1,108 +1,87 @@
-// // import { FaTachometerAlt, FaMapMarkedAlt, FaChartLine, FaHeartbeat, FaDollarSign } from "react-icons/fa"
-
-// // export default function Sidebar() {
-// //   return (
-// //     <div className="w-64 bg-white shadow-lg p-6 hidden md:block">
-// //       <h1 className="text-2xl font-bold text-blue-600 mb-10">AeroSense</h1>
-
-// //       <nav className="space-y-4 text-gray-600">
-// //         <NavItem icon={<FaTachometerAlt />} text="Dashboard" active />
-// //         <NavItem icon={<FaMapMarkedAlt />} text="Map View" />
-// //         <NavItem icon={<FaChartLine />} text="Forecasts" />
-// //         <NavItem icon={<FaHeartbeat />} text="Health Insights" />
-// //         <NavItem icon={<FaDollarSign />} text="Pricing" />
-// //       </nav>
-// //     </div>
-// //   )
-// // }
-
-// // function NavItem({ icon, text, active }) {
-// //   return (
-// //     <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition 
-// //       ${active ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}>
-// //       {icon}
-// //       <span>{text}</span>
-// //     </div>
-// //   )
-// // }
-
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Map, 
-  TrendingUp, 
-  Target, 
-  Wind,
-  LogOut,
-  Settings
-} from 'lucide-react';
+import {
+  Home,
+  Map,
+  Activity,
+  BarChart2,
+  Heart,
+  Layers,
+  Settings,
+  Menu,
+  //import React from 'react';
+  //import { NavLink } from 'react-router-dom';
+  //import {
+    //Home,
+  //   Map,
+  //   Activity,
+  //   BarChart2,
+  //   Heart,
+  //   Layers,
+  //   Settings,
+  //   Menu,
+     ChevronLeft
+  } from 'lucide-react';
 
-const Sidebar = () => {
-  const navItems = [
-    { path: '/overview', icon: LayoutDashboard, label: 'Policy Overview' },
-    { path: '/source-identification', icon: Map, label: 'Source Identification' },
-    { path: '/forecast', icon: TrendingUp, label: 'Forecast & Trends' },
-    { path: '/recommendations', icon: Target, label: 'Policy Recommendations' },
+  const items = [
+    { to: '/citizen', label: 'Dashboard', icon: <Home size={16} /> },
+    { to: '/citizen/live-map', label: 'Live Map', icon: <Map size={16} /> },
+    { to: '/citizen/aqi-dashboard', label: 'AQI', icon: <BarChart2 size={16} /> },
+    { to: '/citizen/source-analysis', label: 'Source Analysis', icon: <Layers size={16} /> },
+    { to: '/citizen/forecast-alerts', label: 'Forecast', icon: <Activity size={16} /> },
+    { to: '/citizen/health-advisory', label: 'Health Advisory', icon: <Heart size={16} /> }, 
+    
   ];
 
-  return (
-    <aside className="w-64 bg-blue-deep border-r border-blue-medium flex flex-col">
-      {/* Logo */}
-      <div className="p-6 border-b border-blue-medium">
-        <div className="flex items-center space-x-2">
-          <Wind className="h-8 w-8 text-blue-accent" />
-          <div>
-            <h1 className="text-white font-bold text-lg">PolluTrack</h1>
-            <p className="text-xs text-gray-500">Delhi-NCR</p>
+  export default function Sidebar({ collapsed, onToggle }) {
+    return (
+      <aside className={`h-screen sticky top-0 z-20 flex-shrink-0 transition-all duration-300 ease-in-out ${collapsed ? 'w-16' : 'w-56'} bg-blue-medium text-white shadow-lg`}>
+        <div className="h-16 flex items-center px-4 border-b border-blue-medium">
+          <div className="flex items-center justify-between w-full">
+            {!collapsed && <div className="text-lg font-semibold">AeroSense</div>}
+            <button onClick={onToggle} className="p-2 rounded hover:bg-blue-700">
+              {collapsed ? <Menu size={16} /> : <ChevronLeft size={16} />}
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
-                isActive
-                  ? 'bg-blue-accent/20 text-blue-accent border-l-4 border-blue-accent'
-                  : 'text-gray-400 hover:bg-blue-medium hover:text-white'
-              }`
-            }
-          >
-            <item.icon className="h-5 w-5" />
-            <span className="text-sm font-medium">{item.label}</span>
-          </NavLink>
-        ))}
-      </nav>
+        <nav className="mt-4 px-2">
+          {items.map((it) => (
+            <NavLink
+              key={it.to}
+              to={it.to}
+              end
+              className={({ isActive }) => `flex items-center gap-3 px-3 py-2 mb-1 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-blue-800 hover:text-white'}`}
+            >
+              <div className="w-6 h-6 flex items-center justify-center text-blue-accent">{it.icon}</div>
+              {!collapsed && <span className="text-sm font-medium">{it.label}</span>}
+            </NavLink>
+          ))}
+        </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-blue-medium space-y-2">
-        <button className="flex items-center space-x-3 px-4 py-2 w-full text-gray-400 hover:text-white hover:bg-blue-medium rounded-lg transition-colors">
-          <Settings className="h-5 w-5" />
-          <span className="text-sm">Settings</span>
-        </button>
-        <button className="flex items-center space-x-3 px-4 py-2 w-full text-gray-400 hover:text-white hover:bg-blue-medium rounded-lg transition-colors">
-          <LogOut className="h-5 w-5" />
-          <span className="text-sm">Logout</span>
-        </button>
-      </div>
-    </aside>
-  );
-};
+        <div className="mt-auto p-4 text-xs text-gray-300 border-t border-blue-medium">
+          <div>AeroSense — v1.0</div>
+        </div>
+      </aside>
+    );
+  }
+// //         <NavItem icon={<FaDollarSign />} text="Pricing" />
 
-export default Sidebar;
+// //       </nav>
+
+// //     </div>
+
+// //   )
+
+// // }
 
 
 
+// // function NavItem({ icon, text, active }) {
 
+// //   return (
 
+// //     <div className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition 
 
-
-
-
+// //       ${active ? "bg-blue-500 text-white" : "hover:bg-gray-100"}`}>
 
