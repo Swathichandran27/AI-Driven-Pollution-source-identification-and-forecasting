@@ -2,6 +2,9 @@ from flask import Blueprint, request, jsonify
 from app import db
 from app.models import AQIPrediction, PollutionSource
 from sqlalchemy import func
+from groq import Groq
+import os
+import json
 
 policy_bp = Blueprint('policy', __name__, url_prefix='/api/policy')
 
@@ -324,3 +327,78 @@ def recommendations():
             "risks": ["Farmer resistance", "Monitoring difficulty", "Seasonal pressure"]
         }
     })
+
+    # ==============================
+# 5. AI INSIGHTS (GROQ)
+# ==============================
+
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+@policy_bp.route('/ai-insights', methods=['GET'])
+def ai_insights():
+
+    # Reuse your existing DB queries
+    avg_aqi = db.session.query(func.avg(AQIPrediction.predicted_aqi)).scalar() or 0
+    avg_aqi = round(avg_aqi, 1)
+
+    sources = db.session.query(
+        func.avg(PollutionSource.vehicles),
+        func.avg(PollutionSource.industry),
+        func.avg(PollutionSource.dust),
+        func.avg(PollutionSource.biomass)
+    ).first()
+
+    avg_v = round(sources[0] or 0, 1)
+    avg_i = round(sources[1] or 0, 1)
+    avg_d = round(sources[2] or 0, 1)
+    avg_b = round(sources[3] or 0, 1)
+
+    # Forecast from your existing data
+    forecast_24 = round(avg_aqi * 1.05, 1)
+    forecast_72 = round(avg_aqi * 1.10, 1)
+
+    prompt = f"""
+You are an air quality policy expert for Delhi-NCR.
+
+Current Data:
+- Average AQI across Delhi-NCR: {avg_aqi}
+- Vehicular Emissions: {avg_v}%
+- Industrial Activity: {avg_i}%
+- Road Dust: {avg_d}%
+- Biomass Burning: {avg_b}%
+- 24hr Forecast AQI: {forecast_24}
+- 72hr Forecast AQI: {forecast_72}
+
+Respond ONLY in this exact JSON format, no extra text, no markdown:
+{{
+  "summary": "2 sentence overall situation summary",
+  "policy_interventions": [
+    "specific intervention 1 based on dominant source",
+    "specific intervention 2",
+    "specific intervention 3"
+  ],
+  "citizen_advisories": [
+    "simple health advisory 1",
+    "simple health advisory 2"
+  ],
+  "high_risk_window": "predicted peak pollution period in next 72hrs",
+  "intervention_effectiveness": {{
+    "odd_even_scheme": "estimated AQI reduction if applied",
+    "stubble_ban": "estimated AQI reduction if applied",
+    "construction_halt": "estimated AQI reduction if applied"
+  }}
+}}
+"""
+
+    try:
+        response = groq_client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = response.choices[0].message.content.strip()
+        text = text.replace("```json", "").replace("```", "").strip()
+        return jsonify(json.loads(text))
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    

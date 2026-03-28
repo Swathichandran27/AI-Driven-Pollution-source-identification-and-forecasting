@@ -51,7 +51,7 @@ export default function Dashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h2 className="text-3xl font-bold">Air Quality Dashboard</h2>
-            <p className="text-gray-500">Real-time air quality for Delhi</p>
+            <p className="text-[#94a3b8]">Real-time air quality for Delhi</p>
           </div>
 
           <div className="flex items-center gap-4">

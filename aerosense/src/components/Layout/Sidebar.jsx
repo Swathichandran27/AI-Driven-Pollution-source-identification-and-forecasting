@@ -51,7 +51,7 @@ import {
               key={it.to}
               to={it.to}
               end
-              className={({ isActive }) => `flex items-center gap-3 px-3 py-2 mb-1 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-gray-300 hover:bg-blue-800 hover:text-white'}`}
+              className={({ isActive }) => `flex items-center gap-3 px-3 py-2 mb-1 rounded-lg transition-colors ${isActive ? 'bg-blue-700 text-white' : 'text-[#94a3b8] hover:bg-blue-800 hover:text-white'}`}
             >
               <div className="w-6 h-6 flex items-center justify-center text-blue-accent">{it.icon}</div>
               {!collapsed && <span className="text-sm font-medium">{it.label}</span>}
@@ -59,7 +59,7 @@ import {
           ))}
         </nav>
 
-        <div className="mt-auto p-4 text-xs text-gray-300 border-t border-blue-medium">
+        <div className="mt-auto p-4 text-xs text-[#94a3b8] border-t border-blue-medium">
           <div>AeroSense — v1.0</div>
         </div>
       </aside>

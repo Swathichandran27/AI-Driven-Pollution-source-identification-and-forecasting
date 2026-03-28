@@ -471,9 +471,9 @@ const HealthAdvisory = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Age Group</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Age Group</label>
                 <select 
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-white/5 bg-[#071526] text-[#e2e8f0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563EB]"
                   value={userProfile.age}
                   onChange={(e) => setUserProfile({...userProfile, age: parseInt(e.target.value)})}
                 >
@@ -485,9 +485,9 @@ const HealthAdvisory = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Health Conditions</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Health Conditions</label>
                 <select 
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-white/5 bg-[#071526] text-[#e2e8f0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563EB]"
                   value={userProfile.healthConditions[0]}
                   onChange={(e) => setUserProfile({...userProfile, healthConditions: [e.target.value]})}
                 >
@@ -500,9 +500,9 @@ const HealthAdvisory = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Outdoor Activity</label>
+                <label className="block text-sm font-medium text-[#94a3b8] mb-1">Outdoor Activity</label>
                 <select 
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-white/5 bg-[#071526] text-[#e2e8f0] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2563EB]"
                   value={userProfile.outdoorActivity}
                   onChange={(e) => setUserProfile({...userProfile, outdoorActivity: e.target.value})}
                 >
@@ -520,7 +520,7 @@ const HealthAdvisory = () => {
                     onChange={(e) => setUserProfile({...userProfile, useMask: e.target.checked})}
                     className="rounded text-blue-600"
                   />
-                  <span className="text-sm text-gray-700">Use mask regularly</span>
+                  <span className="text-sm text-[#94a3b8]">Use mask regularly</span>
                 </label>
 
                 <label className="flex items-center gap-2">
@@ -530,7 +530,7 @@ const HealthAdvisory = () => {
                     onChange={(e) => setUserProfile({...userProfile, hasAirPurifier: e.target.checked})}
                     className="rounded text-blue-600"
                   />
-                  <span className="text-sm text-gray-700">Have air purifier</span>
+                  <span className="text-sm text-[#94a3b8]">Have air purifier</span>
                 </label>
               </div>
             </div>
@@ -652,10 +652,10 @@ const HealthAdvisory = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Recommendations */}
           <div className="lg:col-span-2 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900">Personalized Recommendations</h2>
+            <h2 className="text-lg font-semibold text-white">Personalized Recommendations</h2>
             
             {filteredRecommendations.map((rec) => (
-              <div key={rec.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
+              <div key={rec.id} className="bg-[#1e293b] rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow border border-white/5 backdrop-blur-sm">
                 <div className="flex items-start gap-4">
                   <div className={`p-3 ${rec.bgLight} rounded-xl`}>
                     <span className={rec.textColor}>{rec.icon}</span>
@@ -663,7 +663,7 @@ const HealthAdvisory = () => {
                   
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-semibold text-gray-900">{rec.title}</h3>
+                      <h3 className="font-semibold text-white">{rec.title}</h3>
                       {rec.priority === 'high' && (
                         <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">
                           Priority
@@ -671,12 +671,12 @@ const HealthAdvisory = () => {
                       )}
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-3">{rec.description}</p>
+                    <p className="text-sm text-gray-200 mb-3">{rec.description}</p>
                     
                     {/* Additional Info based on recommendation type */}
                     {rec.bestTimes && (
                       <div className="mb-3">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Best Times:</p>
+                        <p className="text-xs font-medium text-gray-300 mb-1">Best Times:</p>
                         <div className="flex gap-2">
                           {rec.bestTimes.map((time, idx) => (
                             <span key={idx} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
@@ -689,7 +689,7 @@ const HealthAdvisory = () => {
                     
                     {rec.groups && (
                       <div className="mb-3">
-                        <p className="text-xs font-medium text-gray-500 mb-1">Affected Groups:</p>
+                        <p className="text-xs font-medium text-gray-300 mb-1">Affected Groups:</p>
                         <div className="flex flex-wrap gap-1">
                           {rec.groups.map((group, idx) => (
                             <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
@@ -704,7 +704,7 @@ const HealthAdvisory = () => {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
                           <p className="text-xs font-medium text-green-600 mb-1">Eat More:</p>
-                          <ul className="text-xs text-gray-600 list-disc list-inside">
+                          <ul className="text-xs text-gray-200 list-disc list-inside">
                             {rec.foods.eat.map((food, idx) => (
                               <li key={idx}>{food}</li>
                             ))}
@@ -712,7 +712,7 @@ const HealthAdvisory = () => {
                         </div>
                         <div>
                           <p className="text-xs font-medium text-red-600 mb-1">Avoid:</p>
-                          <ul className="text-xs text-gray-600 list-disc list-inside">
+                          <ul className="text-xs text-gray-200 list-disc list-inside">
                             {rec.foods.avoid.map((food, idx) => (
                               <li key={idx}>{food}</li>
                             ))}
@@ -725,7 +725,7 @@ const HealthAdvisory = () => {
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div className="p-2 bg-yellow-50 rounded">
                           <p className="text-xs font-medium text-yellow-700 mb-1">Mild Symptoms:</p>
-                          <ul className="text-xs text-gray-600 list-disc list-inside">
+                          <ul className="text-xs text-gray-200 list-disc list-inside">
                             {rec.symptoms.mild.map((symptom, idx) => (
                               <li key={idx}>{symptom}</li>
                             ))}
@@ -743,10 +743,10 @@ const HealthAdvisory = () => {
                     )}
                     
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-2">Recommended Actions:</p>
+                        <p className="text-xs font-medium text-gray-300 mb-2">Recommended Actions:</p>
                       <ul className="space-y-1">
                         {rec.actions.map((action, idx) => (
-                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                          <li key={idx} className="text-sm text-gray-200 flex items-start gap-2">
                             <CheckCircle size={14} className="text-green-500 mt-0.5" />
                             <span>{action}</span>
                           </li>
@@ -767,14 +767,14 @@ const HealthAdvisory = () => {
           {/* Right Column - Additional Info */}
           <div className="space-y-6">
             {/* Real-time Health Alerts */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Health Alerts</h2>
+            <div className="bg-[#1e293b] rounded-xl shadow-md p-6 border border-white/5 backdrop-blur-sm">
+              <h2 className="text-lg font-semibold text-white mb-4">Health Alerts</h2>
 
               <div className="space-y-3">
                 {alertsToRender.map((alert, idx) => (
                   <div key={alert.id || idx} className={`p-3 rounded-lg ${
-                    alert.type === 'warning' ? 'bg-red-50' :
-                    alert.type === 'info' ? 'bg-blue-50' : 'bg-green-50'
+                    alert.type === 'warning' ? 'bg-red-900/10' :
+                    alert.type === 'info' ? 'bg-blue-900/10' : 'bg-green-900/10'
                   }`}>
                     <div className="flex items-start gap-2">
                       {alert.type === 'warning' ? (
@@ -785,9 +785,9 @@ const HealthAdvisory = () => {
                         <CheckCircle size={16} className="text-green-600 mt-0.5" />
                       )}
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{alert.title}</p>
-                        <p className="text-xs text-gray-600 mt-1">{alert.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{alert.time}</p>
+                        <p className="text-sm font-medium text-white">{alert.title}</p>
+                        <p className="text-xs text-gray-300 mt-1">{alert.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">{alert.time}</p>
                       </div>
                     </div>
                   </div>
@@ -800,27 +800,27 @@ const HealthAdvisory = () => {
             </div>
 
             {/* Safe Route Suggestions */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Safe Routes Today</h2>
+            <div className="bg-[#1e293b] rounded-xl shadow-md p-6 border border-white/5 backdrop-blur-sm">
+              <h2 className="text-lg font-semibold text-white mb-4">Safe Routes Today</h2>
               
               <div className="space-y-3">
                 {routesToShow.map((route) => (
-                  <div key={route.id} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div key={route.id} className="p-3 border rounded-lg hover:bg-[#0f172a] cursor-pointer">
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{route.from} → {route.to}</p>
-                        <p className="text-xs text-gray-500">{route.mode} • {route.duration}</p>
+                        <p className="text-sm font-medium text-white">{route.from} → {route.to}</p>
+                        <p className="text-xs text-gray-300">{route.mode} • {route.duration}</p>
                       </div>
                       <span className={`px-2 py-1 text-xs rounded-full ${
-                        route.pollutionLevel === 'Better' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                        route.pollutionLevel === 'Better' ? 'bg-green-800 text-green-200' : 'bg-orange-800 text-orange-200'
                       }`}>
                         AQI {route.aqi}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">Via: {route.route}</p>
+                    <p className="text-xs text-gray-300 mb-2">Via: {route.route}</p>
                     <div className="flex gap-1">
                       {route.tips.map((tip, idx) => (
-                        <span key={idx} className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        <span key={idx} className="text-xs text-blue-200 bg-blue-900/10 px-2 py-1 rounded">
                           {tip}
                         </span>
                       ))}
@@ -829,7 +829,7 @@ const HealthAdvisory = () => {
                 ))}
               </div>
               
-              <button className="w-full mt-4 text-center text-sm text-blue-600 hover:text-blue-700">
+              <button className="w-full mt-4 text-center text-sm text-blue-400 hover:text-blue-200">
                 Plan your route
               </button>
             </div>
@@ -870,65 +870,7 @@ const HealthAdvisory = () => {
           </div>
         </div>
 
-        {/* Weekly Health Plan */}
-        <div className="mt-6 bg-white rounded-xl shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Your Weekly Health Plan</h2>
-            <button className="text-blue-600 text-sm font-medium">Customize</button>
-          </div>
-          
-            <div className="grid grid-cols-7 gap-2">
-            {forecastToShow && forecastToShow.length ? (
-              forecastToShow.map((f, idx) => (
-                <div key={idx} className="text-center">
-                  <p className="text-xs text-gray-500 mb-2">{f.day || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][idx]}</p>
-                  <div className={`p-2 rounded-lg ${
-                    (f.aqi || 0) > 300 ? 'bg-red-100' : (f.aqi || 0) > 200 ? 'bg-orange-100' : (f.aqi || 0) > 100 ? 'bg-yellow-100' : 'bg-green-100'
-                  }`}>
-                    <p className="text-xs font-medium">AQI {f.aqi ?? '—'}</p>
-                  </div>
-                  <div className="mt-2">
-                    {f.advice ? (
-                      <span className="text-xs text-gray-700">{f.advice}</span>
-                    ) : (
-                      (f.aqi || 0) > 200 ? <span className="text-xs text-red-600">🚫 Outdoor</span> : <span className="text-xs text-green-600">✅ Safe</span>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => (
-                <div key={idx} className="text-center">
-                  <p className="text-xs text-gray-500 mb-2">{day}</p>
-                  <div className={`p-2 rounded-lg ${
-                    idx === 0 ? 'bg-red-100' : 
-                    idx === 1 ? 'bg-orange-100' : 
-                    idx === 2 ? 'bg-orange-100' : 
-                    idx === 3 ? 'bg-yellow-100' : 
-                    'bg-green-100'
-                  }`}>
-                    <p className="text-xs font-medium">
-                      {idx === 0 ? 'AQI 312' : 
-                       idx === 1 ? 'AQI 285' : 
-                       idx === 2 ? 'AQI 245' : 
-                       idx === 3 ? 'AQI 198' : 
-                       'AQI 165'}
-                    </p>
-                  </div>
-                  <div className="mt-2">
-                    {idx === 0 ? (
-                      <span className="text-xs text-red-600">🚫 Outdoor</span>
-                    ) : idx === 1 ? (
-                      <span className="text-xs text-orange-600">⚠️ Limited</span>
-                    ) : (
-                      <span className="text-xs text-green-600">✅ Safe</span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        {/* Weekly plan removed per user request */}
         </div>
       </main>
     </div>

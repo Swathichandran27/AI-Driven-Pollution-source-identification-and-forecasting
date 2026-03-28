@@ -27,11 +27,11 @@ const PolicySidebar = () => {
             onClick={() => navigate('/')}
             className="p-2 hover:bg-blue-medium rounded-lg transition-colors"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-400" />
+            <ArrowLeft className="h-5 w-5 text-[#94a3b8]" />
           </button>
           <div>
             <h1 className="text-white font-bold text-lg">Policy Dashboard</h1>
-            <p className="text-xs text-gray-500">Delhi-NCR</p>
+            <p className="text-xs text-[#94a3b8]">Delhi-NCR</p>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@ const PolicySidebar = () => {
               `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
                   ? 'bg-blue-accent/20 text-blue-accent border-l-4 border-blue-accent'
-                  : 'text-gray-400 hover:bg-blue-medium hover:text-white'
+                  : 'text-[#94a3b8] hover:bg-blue-medium hover:text-white'
               }`
             }
           >

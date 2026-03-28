@@ -325,13 +325,13 @@ const fetchLiveData = useCallback(async () => {
         </div>
 
         {/* Controls Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="bg-[#1e293b] rounded-xl shadow-md p-4 mb-6 border border-white/5 backdrop-blur-sm">
           <div className="flex flex-wrap items-center gap-4">
             {/* ✅ Heatmap Toggle */}
-            <button
+              <button
               onClick={() => setShowHeatmap(!showHeatmap)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                showHeatmap ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                showHeatmap ? 'bg-blue-600 text-white' : 'bg-[#243447] text-gray-200 hover:bg-[#2b3b4a]'
               }`}
             >
               <Layers size={16} />
@@ -342,7 +342,7 @@ const fetchLiveData = useCallback(async () => {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              className="px-4 py-2 border rounded-lg bg-white"
+              className="px-4 py-2 border rounded-lg bg-[#243447] text-gray-200"
             >
               <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
@@ -359,7 +359,7 @@ const fetchLiveData = useCallback(async () => {
         {/* Main Grid: Map + Trend Chart */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* ✅ Map with Colored AQI Bubbles */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-4">
+          <div className="lg:col-span-2 bg-[#1e293b] rounded-xl shadow-md p-4 border border-white/5 backdrop-blur-sm">
             <div className="h-[600px] rounded-lg overflow-hidden">
               <MapContainer
                 center={mapCenter}
@@ -455,7 +455,7 @@ const fetchLiveData = useCallback(async () => {
             {/* Selected Station Info */}
             {selectedStation ? (
               <>
-                <div className="bg-white rounded-xl shadow-sm p-4">
+                <div className="bg-[#1e293b] rounded-xl shadow-md p-4 border border-white/5 backdrop-blur-sm">
                   <h2 className="font-semibold text-gray-900 mb-3">Selected Station</h2>
                   <div className="flex items-start justify-between">
                     <div>
@@ -474,7 +474,7 @@ const fetchLiveData = useCallback(async () => {
                 </div>
 
                 {/* Trend Chart */}
-                <div className="bg-white rounded-xl shadow-sm p-4">
+                <div className="bg-[#1e293b] rounded-xl shadow-md p-4 border border-white/5 backdrop-blur-sm">
                   <h2 className="font-semibold text-gray-900 mb-4">AQI Trend ({timeRange})</h2>
                   {trendData ? (
                     <div className="h-[300px]">
@@ -518,7 +518,7 @@ const fetchLiveData = useCallback(async () => {
                 </div>
 
                 {/* Pollutant Breakdown */}
-                <div className="bg-white rounded-xl shadow-sm p-4">
+                <div className="bg-[#1e293b] rounded-xl shadow-md p-4 border border-white/5 backdrop-blur-sm">
                   <h2 className="font-semibold text-gray-900 mb-3">Pollutant Levels</h2>
                   <div className="space-y-3">
                     {[
@@ -544,7 +544,7 @@ const fetchLiveData = useCallback(async () => {
                 </div>
               </>
             ) : (
-              <div className="bg-white rounded-xl shadow-sm p-8 text-center text-gray-400">
+              <div className="bg-[#243447] rounded-xl shadow-md p-8 text-center text-gray-300 border border-white/5 backdrop-blur-sm">
                 <MapIcon size={48} className="mx-auto mb-3 opacity-50" />
                 <p>Click on any station marker to view detailed trends and pollutant data</p>
               </div>

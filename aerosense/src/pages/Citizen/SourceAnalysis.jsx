@@ -49,6 +49,35 @@ export default function SourceAnalysis() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [error, setError] = useState(null);
 
+  // Try other stations when selected station has no data
+  const tryOtherStations = async () => {
+    if (!stations || stations.length === 0) return;
+    setIsLoadingData(true);
+    setError(null);
+    setData(null);
+
+    const others = stations.map(s => s.station).filter(s => s && s !== selectedStation);
+    for (const st of others) {
+      try {
+        const res = await citizenApi.getSourceAnalysis({ station: st });
+        if (res && res.sources && Object.keys(res.sources).length > 0) {
+          setData(res);
+          setSelectedStation(st);
+          setError(null);
+          setIsLoadingData(false);
+          return true;
+        }
+      } catch (e) {
+        // continue to next station
+        console.warn('Fallback fetch failed for', st, e);
+      }
+    }
+
+    setIsLoadingData(false);
+    setError('No data available for selected or recent stations');
+    return false;
+  };
+
   useEffect(() => {
     let mounted = true;
     setIsLoadingStations(true);
@@ -75,25 +104,55 @@ export default function SourceAnalysis() {
     let mounted = true;
     setIsLoadingData(true);
     setError(null);
+    setData(null);
 
-    citizenApi.getSourceAnalysis({ station: selectedStation })
-      .then((res) => {
+    const fetchWithFallback = async (station) => {
+      try {
+        const res = await citizenApi.getSourceAnalysis({ station });
         if (!mounted) return;
-        if (res && res.sources) {
+        if (res && res.sources && Object.keys(res.sources).length > 0) {
           setData(res);
-        } else {
-          setData(null);
+          setError(null);
+          return true;
         }
-      })
-      .catch((err) => {
-        console.error('Source analysis failed', err);
+        return false;
+      } catch (e) {
+        console.error('Source analysis failed for', station, e);
+        return false;
+      }
+    };
+
+    (async () => {
+      const ok = await fetchWithFallback(selectedStation);
+      if (ok) {
+        if (mounted) setIsLoadingData(false);
+        return;
+      }
+
+      // try other recent stations in order
+      const others = stations.map(s => s.station).filter(s => s && s !== selectedStation);
+      for (const st of others) {
+        if (!mounted) break;
+        setError(`No data for ${selectedStation}. Trying ${st}...`);
+        const found = await fetchWithFallback(st);
+        if (found) {
+          if (mounted) {
+            setSelectedStation(st);
+            setIsLoadingData(false);
+          }
+          return;
+        }
+      }
+
+      if (mounted) {
+        setIsLoadingData(false);
+        setError('No data available for selected or recent stations');
         setData(null);
-        setError('No data available for selected station');
-      })
-      .finally(() => mounted && setIsLoadingData(false));
+      }
+    })();
 
     return () => { mounted = false; };
-  }, [selectedStation]);
+  }, [selectedStation, stations]);
 
   const chartData = data ? formatSources(data.sources) : [];
   const total = chartData.reduce((s, i) => s + i.value, 0);
@@ -133,8 +192,8 @@ export default function SourceAnalysis() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-[#111827] rounded-xl p-6 shadow-sm">
+          <div className="lg:col-span-1">
+            <div className="bg-[#111827] rounded-xl p-6 shadow-sm h-full">
               <h2 className="text-lg font-semibold text-white">Basic Info</h2>
 
               {isLoadingData ? (
@@ -142,7 +201,10 @@ export default function SourceAnalysis() {
               ) : error ? (
                 <p className="text-sm text-red-400 mt-4">{error}</p>
               ) : !data ? (
-                <p className="text-sm text-gray-300 mt-4">No data available for this station.</p>
+                <div className="mt-4 space-y-3">
+                  <p className="text-sm text-gray-300">No data available for this station.</p>
+                  <button onClick={tryOtherStations} className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm">Try another recent station</button>
+                </div>
               ) : (
                 <div className="mt-4 space-y-2 text-sm text-gray-200">
                   <div><strong>Station:</strong> {data.station}</div>
@@ -168,19 +230,10 @@ export default function SourceAnalysis() {
                 </div>
               )}
             </div>
-
-            <div className="bg-[#111827] rounded-xl p-4 shadow-sm">
-              <h3 className="text-sm font-medium text-white">Quick tips</h3>
-              <ul className="text-xs text-gray-300 mt-3 space-y-2">
-                <li>• Use the station dropdown to load specific station data.</li>
-                <li>• Chart shows relative contribution of each source.</li>
-                <li>• If backend returns no data, try another recent station.</li>
-              </ul>
-            </div>
           </div>
 
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-[#111827] rounded-xl p-6 shadow-sm">
+            <div className="bg-[#111827] rounded-xl p-6 shadow-sm h-full">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-white">Source Breakdown</h2>
                 <div className="text-sm text-gray-300">{isLoadingData ? 'Loading…' : (data ? `${total} total` : '')}</div>
@@ -189,7 +242,10 @@ export default function SourceAnalysis() {
               {isLoadingData ? (
                 <div className="h-64 flex items-center justify-center">Loading chart…</div>
               ) : !data ? (
-                <div className="h-64 flex items-center justify-center text-gray-400">No data to display</div>
+                <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+                  <div className="mb-3">No data to display</div>
+                  <button onClick={tryOtherStations} className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm">Try another recent station</button>
+                </div>
               ) : (
                 <div style={{ width: '100%', height: 360 }}>
                   <ResponsiveContainer>

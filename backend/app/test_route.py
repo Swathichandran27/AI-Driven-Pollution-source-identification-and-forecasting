@@ -1,120 +1,80 @@
+from flask import Blueprint, request, jsonify
 import osmnx as ox
 import networkx as nx
 import pandas as pd
-import numpy as np
 from scipy.spatial import cKDTree
-import matplotlib.pyplot as plt
 
-print("Loading Delhi road network...")
+# 🔹 Create Blueprint
+route_bp = Blueprint("route_bp", __name__)
 
-G = ox.load_graphml("delhi_roads.graphml")
-graph = G.copy()   # KEEP MultiDiGraph
-
-nodes, edges = ox.graph_to_gdfs(graph)
+print("🚀 Loading AeroSense Routing Engine...")
 
 # ==========================================================
-# 2️⃣ LOAD REAL AQI DATA (PM2.5)
+# 1️⃣ LOAD GRAPH (DISABLED FOR NOW)
 # ==========================================================
-print("Loading pollution data...")
-
-pollution_df = pd.read_csv(r"D:\miniproject\AI-Driven-Pollution-source-identification-and-forecasting\ml_project\data\raw\real_time_aqi_data.csv")
-pollution_df = pollution_df[pollution_df["pollutant_id"] == "PM2.5"]
-pollution_df = pollution_df[["latitude", "longitude", "avg_value"]]
+graph = None
+nodes = None
+edges = None
 
 # ==========================================================
-# 3️⃣ MAP POLLUTION TO NODES
+# 2️⃣ LOAD POLLUTION DATA (DISABLED FOR NOW)
 # ==========================================================
-print("Mapping pollution to nodes...")
-
-station_coords = pollution_df[["longitude", "latitude"]].values
-tree = cKDTree(station_coords)
-
-node_coords = nodes[["x", "y"]].values
-_, indices = tree.query(node_coords)
-
-nodes["pollution"] = pollution_df.iloc[indices]["avg_value"].values
-
-max_poll = nodes["pollution"].max()
-nodes["pollution_norm"] = nodes["pollution"] / max_poll
-
-nx.set_node_attributes(graph, nodes["pollution"].to_dict(), "pollution")
-nx.set_node_attributes(graph, nodes["pollution_norm"].to_dict(), "pollution_norm")
+pollution_df = None
 
 # ==========================================================
-# 4️⃣ CREATE EDGE WEIGHTS
+# 3️⃣ PROCESS ONLY IF DATA EXISTS
 # ==========================================================
-print("Creating edge weights...")
+if pollution_df is not None and graph is not None:
 
-ALPHA = 30   # Pollution importance factor
+    nodes, edges = ox.graph_to_gdfs(graph)
 
-for u, v, k, data in graph.edges(keys=True, data=True):
+    pollution_df = pollution_df[pollution_df["pollutant_id"] == "PM2.5"]
+    pollution_df = pollution_df[["latitude", "longitude", "avg_value"]]
 
-    pollution_factor = (
-        graph.nodes[u]["pollution_norm"] +
-        graph.nodes[v]["pollution_norm"]
-    ) / 2
+    station_coords = pollution_df[["longitude", "latitude"]].values
+    tree = cKDTree(station_coords)
 
-    length = data["length"]
+    node_coords = nodes[["x", "y"]].values
+    _, indices = tree.query(node_coords)
 
-    # Pure pollution cost (not multiplied twice)
-    data["pollution_weight"] = pollution_factor
+    nodes["pollution"] = pollution_df.iloc[indices]["avg_value"].values
 
-    # Balanced cost
-    data["balanced_weight"] = length + (ALPHA * pollution_factor * length)
+    max_poll = nodes["pollution"].max()
+    nodes["pollution_norm"] = nodes["pollution"] / max_poll
 
-# ==========================================================
-# 5️⃣ USER INPUT
-# ==========================================================
-print("\nEnter Source Latitude (28.x):")
-src_lat = float(input())
+    nx.set_node_attributes(graph, nodes["pollution"].to_dict(), "pollution")
+    nx.set_node_attributes(graph, nodes["pollution_norm"].to_dict(), "pollution_norm")
 
-print("Enter Source Longitude (77.x):")
-src_lon = float(input())
+    ALPHA = 30
 
-print("\nEnter Destination Latitude:")
-dest_lat = float(input())
+    for u, v, k, data in graph.edges(keys=True, data=True):
+        pollution_factor = (
+            graph.nodes[u]["pollution_norm"] +
+            graph.nodes[v]["pollution_norm"]
+        ) / 2
 
-print("Enter Destination Longitude:")
-dest_lon = float(input())
+        length = data["length"]
 
-origin = ox.distance.nearest_nodes(graph, src_lon, src_lat)
-destination = ox.distance.nearest_nodes(graph, dest_lon, dest_lat)
+        data["pollution_weight"] = pollution_factor
+        data["balanced_weight"] = length + (ALPHA * pollution_factor * length)
 
 # ==========================================================
-# 6️⃣ A* HEURISTIC
+# 4️⃣ HEURISTIC
 # ==========================================================
 def heuristic(u, v):
+    if graph is None:
+        return 0
+
     x1, y1 = graph.nodes[u]['x'], graph.nodes[u]['y']
     x2, y2 = graph.nodes[v]['x'], graph.nodes[v]['y']
     return ((x1 - x2)**2 + (y1 - y2)**2) ** 0.5
 
 # ==========================================================
-# 7️⃣ ROUTE GENERATION USING A*
-# ==========================================================
-print("\nGenerating routes using A*...")
-
-shortest_path = nx.astar_path(
-    graph, origin, destination,
-    heuristic=heuristic,
-    weight="length"
-)
-
-least_pollution_path = nx.astar_path(
-    graph, origin, destination,
-    heuristic=heuristic,
-    weight="pollution_weight"
-)
-
-balanced_path = nx.astar_path(
-    graph, origin, destination,
-    heuristic=heuristic,
-    weight="balanced_weight"
-)
-
-# ==========================================================
-# 8️⃣ METRIC CALCULATION
+# 5️⃣ METRICS
 # ==========================================================
 def calculate_metrics(route):
+    if graph is None:
+        return 0, 0
 
     total_distance = 0
     exposure = 0
@@ -126,80 +86,74 @@ def calculate_metrics(route):
         length = edge_data["length"]
 
         pollution = (
-            graph.nodes[u]["pollution"] +
-            graph.nodes[v]["pollution"]
+            graph.nodes[u].get("pollution", 0) +
+            graph.nodes[v].get("pollution", 0)
         ) / 2
 
         total_distance += length
-        exposure += pollution * length   # realistic exposure
+        exposure += pollution * length
 
     return total_distance / 1000, exposure
 
+# ==========================================================
+# 6️⃣ MAIN ROUTE LOGIC
+# ==========================================================
+def get_routes(src_lat, src_lon, dest_lat, dest_lon):
 
-sd, sp = calculate_metrics(shortest_path)
-ld, lp = calculate_metrics(least_pollution_path)
-bd, bp = calculate_metrics(balanced_path)
+    if graph is None:
+        return {"error": "Routing not available (missing graph data)"}
 
-print("\n================ ROUTE SUGGESTIONS ================\n")
+    origin = ox.distance.nearest_nodes(graph, src_lon, src_lat)
+    destination = ox.distance.nearest_nodes(graph, dest_lon, dest_lat)
 
-print("🚗 Shortest Route")
-print("Distance:", round(sd, 2), "km")
-print("Exposure:", round(sp, 2))
+    shortest_path = nx.astar_path(graph, origin, destination, heuristic=heuristic, weight="length")
+    least_pollution_path = nx.astar_path(graph, origin, destination, heuristic=heuristic, weight="pollution_weight")
+    balanced_path = nx.astar_path(graph, origin, destination, heuristic=heuristic, weight="balanced_weight")
 
-print("\n🌿 Least Pollution Route")
-print("Distance:", round(ld, 2), "km")
-print("Exposure:", round(lp, 2))
+    def route_to_coords(route):
+        return [
+            [graph.nodes[node]["y"], graph.nodes[node]["x"]]
+            for node in route
+        ]
 
-print("\n⚖️ Balanced Route (Recommended)")
-print("Distance:", round(bd, 2), "km")
-print("Exposure:", round(bp, 2))
+    sd, sp = calculate_metrics(shortest_path)
+    ld, lp = calculate_metrics(least_pollution_path)
+    bd, bp = calculate_metrics(balanced_path)
 
-print("\nDisplaying all routes clearly...")
+    return {
+        "shortest": {
+            "path": route_to_coords(shortest_path),
+            "distance": sd,
+            "exposure": sp
+        },
+        "least_pollution": {
+            "path": route_to_coords(least_pollution_path),
+            "distance": ld,
+            "exposure": lp
+        },
+        "balanced": {
+            "path": route_to_coords(balanced_path),
+            "distance": bd,
+            "exposure": bp
+        }
+    }
 
-# Plot base graph once
-fig, ax = ox.plot_graph(
-    graph,
-    node_size=0,
-    edge_color="gray",
-    edge_linewidth=0.5,
-    show=False,
-    close=False
-)
+# ==========================================================
+# 7️⃣ API ENDPOINT
+# ==========================================================
+@route_bp.route("/route", methods=["POST"])
+def route_api():
+    try:
+        data = request.json
 
-# Plot shortest (blue)
-ox.plot_graph_route(
-    graph,
-    shortest_path,
-    ax=ax,
-    route_color="blue",
-    route_linewidth=4,
-    show=False,
-    close=False
-)
+        src_lat = float(data["src_lat"])
+        src_lon = float(data["src_lon"])
+        dest_lat = float(data["dest_lat"])
+        dest_lon = float(data["dest_lon"])
 
-# Plot least pollution (green)
-ox.plot_graph_route(
-    graph,
-    least_pollution_path,
-    ax=ax,
-    route_color="green",
-    route_linewidth=4,
-    show=False,
-    close=False
-)
+        result = get_routes(src_lat, src_lon, dest_lat, dest_lon)
 
-# Plot balanced (red)
-ox.plot_graph_route(
-    graph,
-    balanced_path,
-    ax=ax,
-    route_color="red",
-    route_linewidth=4,
-    show=False,
-    close=False
-)
+        return jsonify(result)
 
-
-plt.show()
-
-print("\nDone ✅")
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
-  TrendingUp, TrendingDown, Minus, AlertTriangle,
-  Wind, Activity, MapPin, Clock, ChevronDown, Zap, RefreshCw
+  TrendingUp, TrendingDown, AlertTriangle,
+  MapPin, ChevronDown, RefreshCw
 } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
@@ -71,7 +71,7 @@ const ForecastTrends = () => {
   const [stations, setStations] = useState([]);
   const [selectedStation, setSelectedStation] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [, setError] = useState(null);
 
   useEffect(() => { fetchStations(); }, []);
   useEffect(() => { if (selectedStation) fetchForecast(selectedStation); }, [selectedStation]);
